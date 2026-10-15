@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+.env
+data
+*.db
+*.db-wal
+*.db-shm
+glpi.config.json
+*.bat
+README.md

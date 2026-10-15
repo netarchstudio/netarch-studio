@@ -1,0 +1,65 @@
+# Version SERVEUR (CentOS) : utilise l'image déjà publiée sur GitHub, sans rien construire.
+# Usage : docker compose -f docker-compose.prod.yml up -d
+# Il faut APP_IMAGE dans le fichier .env, par exemple : ghcr.io/ton-nom/ton-depot:latest (en minuscules)
+services:
+  db:
+    image: mysql:8.4
+    container_name: netarch-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Définir MYSQL_ROOT_PASSWORD dans .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-netarch}
+      MYSQL_USER: ${MYSQL_USER:-netarch}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Définir MYSQL_PASSWORD dans .env}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max_allowed_packet=64M
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks: [netarch]
+
+  app:
+    image: "${APP_IMAGE:?Définir APP_IMAGE dans .env, exemple ghcr.io/ton-nom/ton-depot:latest}"
+    pull_policy: always
+    container_name: netarch-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-netarch}
+      DB_USER: ${MYSQL_USER:-netarch}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${APP_PORT:-3737}:3737"
+    networks: [netarch]
+
+  # Outil ponctuel : copie une ancienne base SQLite (./data/netarch.db) vers MySQL
+  migrate:
+    image: "${APP_IMAGE:?Définir APP_IMAGE dans .env}"
+    profiles: ["migrate"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-netarch}
+      DB_USER: ${MYSQL_USER:-netarch}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./data:/old:ro,z
+    command: ["node", "migrate-sqlite.js", "/old/netarch.db"]
+    networks: [netarch]
+
+volumes:
+  db_data:
+
+networks:
+  netarch:

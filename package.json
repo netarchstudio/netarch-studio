@@ -1,0 +1,11 @@
+{
+  "name": "network-arch-designer",
+  "version": "1.0.0",
+  "description": "NetArch Studio - schéma d'architecture réseau avec catalogue et liaison GLPI (Node.js + MySQL)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "mysql2": "^3.11.0" },
+  "license": "UNLICENSED",
+  "private": true
+}

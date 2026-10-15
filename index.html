@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NetArch Studio — Schéma d'Architecture Réseau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eceee9;--panel:#f7f7f4;--ink:#1d2630;--muted:#66707b;--line:#cfd3cc;
+  --accent:#1f5f8b;--accent-ink:#fff;--danger:#b3372d;--success:#2f8470;--warn:#d97706;--canvas:#f2f3ee;
+  --sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",Consolas,monospace;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#14181d;--panel:#1b2128;--ink:#e4e8ec;--muted:#8c97a3;--line:#2c353f;
+  --accent:#6cb2e0;--accent-ink:#0d1a24;--danger:#ee7a70;--success:#4ade80;--warn:#fbbf24;--canvas:#10141a;
+}}
+:root[data-theme=dark]{
+  --bg:#14181d;--panel:#1b2128;--ink:#e4e8ec;--muted:#8c97a3;--line:#2c353f;
+  --accent:#6cb2e0;--accent-ink:#0d1a24;--danger:#ee7a70;--success:#4ade80;--warn:#fbbf24;--canvas:#10141a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);overflow:hidden}
+
+/* ---- Topbar ---- */
+.topbar{height:54px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:12px;z-index:100;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-badge{width:32px;height:32px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#0f172a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.brand h1{font-size:14.5px;font-weight:600;line-height:1.2}
+.brand-sub{font-size:11px;color:var(--muted)}
+.view-switcher{display:none}
+.topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:600;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;white-space:nowrap;line-height:1.2}
+.btn:hover{background:var(--bg);border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{background:rgba(179,55,45,.12);border-color:rgba(179,55,45,.35);color:var(--danger)}
+.btn.danger:hover{background:rgba(179,55,45,.2)}
+.btn.icon{width:32px;height:32px;padding:0;flex:none}
+.save-badge{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted)}
+.save-dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex:none}
+.save-dot.saving{background:var(--warn);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.form-header-box{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.form-header-box h2{font-size:16px;font-weight:600}
+
+/* ---- Menu latéral gauche ---- */
+.left-menu{width:240px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;z-index:100}
+.left-menu-brand{display:flex;align-items:center;gap:10px;padding:16px 14px;border-bottom:1px solid var(--line)}
+.brand-badge-sm{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#0f172a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.brand-title-sm{font-size:13px;font-weight:600;line-height:1.2}
+.brand-sub-sm{font-size:10px;color:var(--muted)}
+.left-menu-nav{display:flex;flex-direction:column;gap:2px;padding:12px 10px;flex:1}
+.left-menu-btn{background:none;border:none;color:var(--muted);padding:11px 12px;font:inherit;font-size:13px;font-weight:500;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;text-align:left;width:100%}
+.left-menu-btn:hover{background:var(--bg);color:var(--ink)}
+.left-menu-btn.active{background:var(--accent);color:#fff;font-weight:600}
+.left-menu-icon{display:flex;align-items:center;justify-content:center;flex:none}
+.left-menu-text{flex:1}
+.left-menu-footer{padding:12px;border-top:1px solid var(--line)}
+.left-menu-footer .save-badge{margin:0}
+
+/* ---- Layout principal ---- */
+.main-wrapper{height:calc(100% - 54px);position:relative;overflow:hidden;display:flex}
+
+/* ---- Vue Formulaire ---- */
+.view-form{flex:1;display:grid;grid-template-columns:240px 1fr;height:100%;min-width:0}
+.view-form:not(.active){display:none}
+.view-form .sidebar-nav{background:var(--accent);color:#fff;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.view-form .sidebar-nav button{background:none;border:none;color:#fff;padding:10px 12px;text-align:left;font:inherit;font-size:13px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s}
+.view-form .sidebar-nav button:hover{background:rgba(255,255,255,.15)}
+.view-form .sidebar-nav button.active{background:rgba(255,255,255,.25);font-weight:600}
+.view-form .sidebar-nav button .badge{background:#f59e0b;color:#fff;font-size:9px;padding:2px 6px;border-radius:10px;margin-left:auto}
+.view-form .content-area{overflow-y:auto;padding:20px 24px 80px}
+.form-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.form-cols>.card-section{margin-bottom:0}
+.form-section{display:none}
+.form-section.active{display:block}
+.card-section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:20px}
+.card-section h3{font-size:14.5px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+/* ---- Catalogue ---- */
+.catalog-explorer{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:18px}
+.catalog-filters{display:grid;grid-template-columns:1fr 1fr 1.6fr auto;gap:10px;margin-bottom:12px}
+.catalog-table-wrap{max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:6px}
+.catalog-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+.catalog-table th{background:var(--panel);padding:8px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-weight:600;position:sticky;top:0;z-index:2}
+.catalog-table td{padding:7px 10px;border-bottom:1px solid var(--line)}
+.catalog-table tr:hover td{background:rgba(31,95,139,.06)}
+.badge-osi{display:inline-block;padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:600;background:rgba(31,95,139,.12);color:var(--accent);border:1px solid rgba(31,95,139,.25);white-space:nowrap}
+.badge-type{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(47,132,112,.12);color:var(--success);border:1px solid rgba(47,132,112,.25);white-space:nowrap}
+
+/* ---- Badges statut ---- */
+.bs-on{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.bs-off{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.bs-maint{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
+
+/* ---- Cartes équipements ---- */
+.device-form-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.device-form-card{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.device-db-info-bar{display:flex;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-size:12px}
+.device-form-row{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.1fr 150px auto;gap:10px;align-items:center}
+.device-ports-box{background:var(--panel);border:1px dashed var(--line);border-radius:6px;padding:10px 12px}
+.ports-table{width:100%;border-collapse:collapse;margin-top:6px}
+.ports-table th{font-size:11.5px;color:var(--muted);text-align:left;padding:5px 8px;font-weight:500}
+.ports-table td{padding:5px 8px}
+
+/* ---- Cables ---- */
+.cables-form-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.cable-form-row{display:grid;grid-template-columns:1.2fr 1.2fr 180px 1fr auto;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+
+/* ---- VLAN ---- */
+.vlan-form-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.vlan-form-row{display:grid;grid-template-columns:100px 1.5fr 1.8fr 1fr auto;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+.ip-conflict{background:rgba(217,119,6,.1);border-color:#d97706}
+
+label.f{display:block;color:var(--muted);font-size:11.5px;font-weight:500;margin-bottom:3px}
+input,select,textarea{width:100%;font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 9px}
+input.mono{font-family:var(--mono);font-size:12.5px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ---- Vue Schéma ---- */
+.view-diagram{flex:1;min-width:0;position:relative;width:100%;height:100%}
+.view-diagram:not(.active){display:none}
+.view-diagram aside{position:absolute;top:0;left:0;bottom:0;width:320px;z-index:50}
+.view-diagram .canvas{position:absolute;top:0;left:320px;right:0;bottom:0}
+aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+aside header{padding:14px 16px 0}
+aside h2{font-size:15px;font-weight:600;margin:0 0 10px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:0 12px}
+.tabs button{background:none;border:0;color:var(--muted);padding:8px 10px;font:inherit;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.panel{flex:1;overflow:auto;padding:14px 16px 24px;min-height:0}
+.panel h3{font-size:13px;font-weight:600;margin:18px 0 8px}
+.panel h3:first-child{margin-top:0}
+.row{display:flex;gap:8px;margin-bottom:8px}
+.row>*{flex:1;min-width:0}
+.list{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.item{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item:hover{background:var(--bg)}
+.item.on{background:var(--bg);box-shadow:inset 3px 0 0 var(--accent)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.item .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{color:var(--muted);font:12px var(--mono)}
+.empty{color:var(--muted);padding:10px 2px;font-size:12.5px}
+.editor{border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:14px}
+.canvas{position:relative;min-width:0;min-height:0;background:var(--canvas)}
+svg#cv{width:100%;height:100%;display:block;touch-action:none;user-select:none}
+.tools{position:absolute;top:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap;z-index:10;max-width:calc(100% - 24px)}
+.tools .btn{background:var(--panel)}
+.tools .btn.active-tool{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.hint{position:absolute;left:12px;bottom:10px;color:var(--muted);font-size:11.5px;pointer-events:none;background:rgba(255,255,255,.7);padding:2px 8px;border-radius:4px}
+.wire-banner{position:absolute;top:56px;left:12px;right:12px;display:none;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#1f5f8b;color:#fff;font-size:12.5px;font-weight:500;z-index:11;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.wire-banner.on{display:flex}
+.wire-banner button{margin-left:auto}
+.legend{position:absolute;left:12px;bottom:36px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:11.5px;z-index:12;max-width:290px;max-height:60%;overflow:auto;box-shadow:0 4px 16px rgba(0,0,0,.12);display:none}
+.legend.on{display:block}
+.legend h4{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:8px 0 4px}
+.legend h4:first-child{margin-top:0}
+.legend .lg{display:flex;align-items:center;gap:8px;padding:1.5px 0}
+.legend .sw-line{width:26px;height:0;border-top:3px solid;border-radius:2px;flex:none}
+.legend .sw-box{width:12px;height:12px;border-radius:3px;flex:none}
+.legend .sw-dot{width:10px;height:10px;border-radius:50%;flex:none}
+.menu-wrap{position:relative}
+.menu-pop{position:absolute;top:100%;left:0;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px;display:none;flex-direction:column;min-width:170px;z-index:30;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.menu-pop.on{display:flex}
+.menu-pop button{background:none;border:0;color:var(--ink);font:inherit;font-size:12.5px;text-align:left;padding:7px 10px;border-radius:5px;cursor:pointer}
+.menu-pop button:hover{background:var(--bg)}
+kbd{font:600 11px var(--mono);background:var(--bg);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.kb-grid{display:grid;grid-template-columns:auto 1fr;gap:7px 14px;align-items:center;font-size:12.5px}
+.toast{position:absolute;right:12px;bottom:12px;background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:6px;font-size:13px;max-width:380px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:200}
+.toast.on{opacity:1}
+
+/* ---- Modales ---- */
+.modal-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:100%;max-width:560px;box-shadow:0 20px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;max-height:90vh;animation:mf .2s ease-out}
+.modal-card-lg{max-width:820px}
+@keyframes mf{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-header h3{font-size:16px;font-weight:600}
+.modal-body{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;align-items:center;gap:10px}
+
+/* ---- Formulaire d'ajout SIMPLIFIÉ ---- */
+.quick-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.quick-add-grid .span2{grid-column:span 2}
+.quick-add-tip{font-size:11.5px;color:var(--muted);padding:8px 12px;background:rgba(31,95,139,.07);border-radius:6px;border-left:3px solid var(--accent)}
+
+/* ---- Inspection équipement ---- */
+.inspect-box{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px}
+.insp-avatar{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0}
+.status-selector-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.status-btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:2px;font:inherit;text-align:left;transition:all .15s}
+.status-btn:hover{border-color:var(--muted)}
+.status-btn.active{border-color:var(--accent);background:rgba(31,95,139,.08);box-shadow:0 0 0 1px var(--accent)}
+.status-btn strong{font-size:12.5px;display:flex;align-items:center;gap:6px}
+.status-btn small{font-size:10.5px;color:var(--muted)}
+.status-led{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-led.green{background:#10b981;box-shadow:0 0 5px #10b981}
+.status-led.red{background:#ef4444;box-shadow:0 0 5px #ef4444}
+.status-led.orange{background:#f59e0b;box-shadow:0 0 5px #f59e0b}
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px}
+.spec-item{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+.spec-item.w2{grid-column:span 2}
+.spec-k{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.spec-v{font-weight:500;color:var(--ink)}
+.badge-port-on{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,.15);color:#10b981;font-weight:600;font-size:11px}
+.badge-port-off{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;background:rgba(100,116,139,.15);color:var(--muted);font-weight:500;font-size:11px}
+
+/* ---- Bannière hors-serveur ---- */
+.server-banner{background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;display:none}
+.server-banner.visible{display:flex;gap:8px;align-items:center}
+
+@media(max-width:860px){
+  .left-menu{display:none}
+  .view-diagram{grid-template-columns:1fr;grid-template-rows:1fr 48%}
+  .view-diagram aside{position:static;width:100%;height:auto;max-height:48%}
+  .view-diagram .canvas{position:static;left:auto;right:auto;bottom:auto}
+  .canvas{order:-1}
+  aside{border-right:0;border-top:1px solid var(--line)}
+  .hint{display:none}
+}
+@media(max-width:600px){
+  .view-form{grid-template-columns:1fr}
+  .view-form .sidebar-nav{display:none}
+}
+@media print{
+  .topbar,.left-menu,.view-form,.tools,.hint,.toast,aside,.modal-backdrop,.server-banner,.wire-banner,.legend{display:none!important}
+  .main-wrapper{height:100%}
+  .view-diagram{display:grid!important;grid-template-columns:1fr;height:100%}
+  .canvas{height:100vh}
+}
+</style>
+</head>
+<body>
+
+<!-- ====== TOPBAR ====== -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-badge">SI</div>
+    <div>
+      <h1>NetArch Studio</h1>
+      <div class="brand-sub">Schéma d'architecture &amp; Base de données réseau</div>
+    </div>
+  </div>
+
+  <div class="topbar-actions">
+    <button class="btn primary" id="btn-generate-diagram">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Générer le Schéma
+    </button>
+  </div>
+</header>
+
+<div class="main-wrapper">
+
+  <!-- ====== MENU LATÉRAL GAUCHE ====== -->
+  <aside class="left-menu">
+    <nav class="left-menu-nav">
+      <button class="left-menu-btn active" id="btn-view-form">
+        <span class="left-menu-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        <span class="left-menu-text">Base &amp; Formulaire</span>
+      </button>
+      <button class="left-menu-btn" id="btn-view-diagram">
+        <span class="left-menu-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        </span>
+        <span class="left-menu-text">Schéma d'Architecture</span>
+      </button>
+    </nav>
+    <div class="left-menu-footer">
+      <div class="save-badge" id="save-indicator">
+        <span class="save-dot" id="save-dot"></span>
+        <span id="save-text">Sauvegarde…</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ====== VUE 1 : FORMULAIRE ====== -->
+  <section class="view-form active" id="view-form">
+
+    <!-- Sidebar de navigation -->
+    <nav class="sidebar-nav">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:12px">
+        <div style="width:32px;height:32px;border-radius:6px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-weight:700">SI</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">NetArch Studio</div>
+          <div style="font-size:10px;opacity:.8">Configuration</div>
+        </div>
+      </div>
+
+      <button class="active" data-section="catalog">
+        <span>📚</span> Catalogue
+        <span class="badge" id="nav-cat-count">110</span>
+      </button>
+      <button data-section="devices">
+        <span>🖥️</span> Équipements
+        <span class="badge" id="nav-dev-count">0</span>
+      </button>
+      <button data-section="vlan">
+        <span>🏷️</span> VLAN &amp; Réseaux
+        <span class="badge" id="nav-vlan-count">0</span>
+      </button>
+      <button data-section="cables">
+        <span>🔌</span> Liaisons
+        <span class="badge" id="nav-link-count">0</span>
+      </button>
+      <button data-section="actions">
+        <span>⚙️</span> Actions
+      </button>
+    </nav>
+
+    <!-- Zone de contenu -->
+    <div class="content-area">
+
+      <!-- Bannière si serveur non lancé -->
+      <div class="server-banner" id="server-banner">
+        ⚠️ <strong>Serveur local non détecté.</strong>
+        La sauvegarde entre navigateurs n'est pas active. Lancez <code>Lancer_Application.bat</code> pour activer la base de données partagée.
+      </div>
+
+      <!-- Section Catalogue -->
+      <div class="form-section active" id="section-catalog">
+        <div class="form-header-box">
+          <div>
+            <h2>Catalogue Réseau (<span id="cat-count">110</span> équipements)</h2>
+            <p>Sélectionnez vos équipements dans la base ci-dessous.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn danger" id="btn-form-clear">Vider</button>
+            <button class="btn" id="btn-form-seed">Exemple démo</button>
+          </div>
+        </div>
+
+        <div class="catalog-explorer">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap">
+            <strong style="font-size:13.5px">Base de données du catalogue</strong>
+            <button class="btn primary" id="btn-open-add-cat" style="font-size:12px">+ Ajouter une référence</button>
+          </div>
+          <div class="catalog-filters">
+            <div>
+              <label class="f">Catégorie</label>
+              <select id="filter-cat"><option value="">Toutes</option></select>
+            </div>
+            <div>
+              <label class="f">Fabricant</label>
+              <select id="filter-fab"><option value="">Tous</option></select>
+            </div>
+            <div>
+              <label class="f">Recherche rapide</label>
+              <input type="text" id="filter-search" placeholder="ex: Cisco, Firewall, PoE, 10G, Peplink…">
+            </div>
+            <div style="padding-top:17px">
+              <button class="btn" id="filter-reset">Réinitialiser</button>
+            </div>
+          </div>
+          <div class="catalog-table-wrap">
+            <table class="catalog-table">
+              <thead><tr>
+                <th style="width:80px">Action</th>
+                <th>Catégorie</th>
+                <th>Sous-catégorie</th>
+                <th>Fabricant</th>
+                <th>Fonction principale</th>
+                <th>OSI</th>
+                <th>Ports</th>
+                <th>Type schéma</th>
+              </tr></thead>
+              <tbody id="catalog-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Équipements -->
+      <div class="form-section" id="section-devices">
+        <div class="form-header-box">
+          <h2>Équipements configurés (<span id="count-dev">0</span>)</h2>
+          <button class="btn primary" id="btn-form-add-custom">+ Ajouter libre</button>
+        </div>
+        <div class="device-form-list" id="form-device-list"></div>
+      </div>
+
+      <!-- Section VLAN -->
+      <div class="form-section" id="section-vlan">
+        <div class="form-header-box">
+          <h2>VLAN &amp; Sous-réseaux (<span id="count-vlan">0</span>)</h2>
+          <button class="btn primary" id="btn-form-add-vlan">+ Ajouter VLAN</button>
+        </div>
+        <div id="ip-conflict-alert" style="display:none;padding:10px 14px;background:rgba(217,119,6,.1);border:1px solid #d97706;border-radius:6px;margin-bottom:12px;font-size:12px;color:#d97706">
+          ⚠️ <strong>Adresses IP en double détectées :</strong> <span id="ip-conflict-text"></span>
+        </div>
+        <div class="vlan-form-list" id="form-vlan-list"></div>
+      </div>
+
+      <!-- Section Câbles -->
+      <div class="form-section" id="section-cables">
+        <div class="form-header-box">
+          <h2>Liaisons câblées (<span id="count-links">0</span>)</h2>
+          <button class="btn primary" id="btn-form-add-link">+ Ajouter liaison</button>
+        </div>
+        <div class="cables-form-list" id="form-cable-list"></div>
+      </div>
+
+      <!-- Section Actions -->
+      <div class="form-section" id="section-actions">
+        <div class="form-header-box">
+          <h2>Actions globales</h2>
+        </div>
+        <div class="form-cols">
+          <div class="card-section">
+            <h3>📜 Historique &amp; Restauration</h3>
+            <p style="color:var(--muted);font-size:12.5px;margin-bottom:12px">Restaurer une version précédente de votre schéma.</p>
+            <button class="btn" id="btn-form-history" style="width:100%">Ouvrir l'historique</button>
+          </div>
+          <div class="card-section">
+            <h3>📊 Rapports techniques</h3>
+            <p style="color:var(--muted);font-size:12.5px;margin-bottom:12px">Exporter les données en CSV (Excel).</p>
+            <button class="btn" id="btn-form-reports" style="width:100%">Générer des rapports</button>
+          </div>
+          <div class="card-section">
+            <h3>🔗 Liaison GLPI</h3>
+            <p style="color:var(--muted);font-size:12.5px;margin-bottom:8px">Renseignez GLPI une seule fois : les équipements cochés sont ajoutés au catalogue (pas au schéma).</p>
+            <p id="glpi-card-status" style="font-size:12px;color:var(--muted);margin-bottom:10px">Non configuré.</p>
+            <button class="btn" id="btn-form-glpi" style="width:100%">Paramétrer GLPI</button>
+          </div>
+          <div class="card-section">
+            <h3>💾 Export / Import</h3>
+            <p style="color:var(--muted);font-size:12.5px;margin-bottom:12px">Sauvegarder ou charger votre configuration.</p>
+            <div style="display:flex;gap:8px">
+              <button class="btn" id="btn-actions-export" style="flex:1">Exporter JSON</button>
+              <button class="btn" id="btn-actions-import" style="flex:1">Importer</button>
+            </div>
+            <input type="file" id="file-import-input-actions" accept=".json" style="display:none">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====== VUE 2 : SCHÉMA ====== -->
+  <section class="view-diagram" id="view-diagram">
+    <aside>
+      <header><h2>Édition &amp; Propriétés</h2></header>
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="panel" id="panel"></div>
+    </aside>
+    <main class="canvas" id="wrap">
+      <svg id="cv" role="img" aria-label="Schéma réseau"></svg>
+      <div class="tools">
+        <button class="btn" id="b-back-form">← Formulaire</button>
+        <button class="btn" id="b-add-dev">+ Équipement</button>
+        <button class="btn" id="b-wire">Relier</button>
+        <button class="btn" id="b-labels">Étiquettes</button>
+        <button class="btn" id="b-auto">Auto-disposition</button>
+        <button class="btn" id="b-fit">Recentrer</button>
+        <button class="btn icon" id="b-zin">+</button>
+        <button class="btn icon" id="b-zout">−</button>
+        <button class="btn" id="b-legend" title="Afficher / masquer la légende (G)">Légende</button>
+        <div class="menu-wrap">
+          <button class="btn" id="b-export" title="Exporter le schéma">⬇ Exporter ▾</button>
+          <div class="menu-pop" id="export-menu">
+            <button data-exp="png">Image PNG</button>
+            <button data-exp="svg">Vectoriel SVG</button>
+            <button data-exp="pdf">Document PDF</button>
+            <button data-exp="json">Données JSON</button>
+          </div>
+        </div>
+        <button class="btn icon" id="b-help" title="Raccourcis clavier (?)">?</button>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="wire-banner" id="wire-banner">
+        <span id="wire-banner-text">Mode relier : cliquez le premier équipement.</span>
+        <button class="btn" id="b-wire-cancel" type="button">Annuler</button>
+      </div>
+      <div class="hint">Glissez un équipement pour le déplacer. Cliquez pour l’inspecter. « Relier » relie deux ports précis.</div>
+      <div class="toast" id="toast" role="status"></div>
+    </main>
+  </section>
+
+</div><!-- /main-wrapper -->
+
+<!-- ====================================================
+     MODALE 1 : AJOUT SIMPLIFIÉ (3 champs essentiels)
+     ==================================================== -->
+<div class="modal-backdrop" id="modal-shortcuts" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header"><h3>Raccourcis clavier (vue Schéma)</h3><button class="btn icon" id="btn-close-shortcuts">×</button></div>
+    <div class="modal-body"><div class="kb-grid">
+      <span><kbd>N</kbd></span><span>Nouvel équipement</span>
+      <span><kbd>R</kbd></span><span>Mode « Relier » (Échap pour annuler)</span>
+      <span><kbd>E</kbd></span><span>Afficher / masquer les étiquettes</span>
+      <span><kbd>G</kbd></span><span>Afficher / masquer la légende</span>
+      <span><kbd>A</kbd></span><span>Auto-disposition</span>
+      <span><kbd>F</kbd> ou <kbd>0</kbd></span><span>Recentrer le schéma</span>
+      <span><kbd>+</kbd> <kbd>−</kbd></span><span>Zoom avant / arrière</span>
+      <span><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd></span><span>Déplacer l'équipement sélectionné (<kbd>Maj</kbd> = pas plus grand), ou la vue si rien n'est sélectionné</span>
+      <span><kbd>Suppr</kbd></span><span>Supprimer l'équipement ou la liaison sélectionné(e)</span>
+      <span><kbd>Échap</kbd></span><span>Annuler / désélectionner / fermer</span>
+      <span><kbd>Ctrl</kbd>+<kbd>S</kbd></span><span>Sauvegarder maintenant</span>
+      <span><kbd>Ctrl</kbd>+<kbd>E</kbd></span><span>Exporter en PNG</span>
+      <span><kbd>?</kbd></span><span>Afficher cette aide</span>
+    </div></div>
+    <div class="modal-footer"><button class="btn primary" id="btn-ok-shortcuts">Fermer</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-add-cat" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Ajouter un équipement à la base</h3>
+      <button class="btn icon" id="btn-close-add-cat">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="quick-add-tip">
+        Renseignez les <strong>3 champs essentiels</strong>. Le reste est calculé automatiquement.
+      </div>
+
+      <!-- Champ 1 : Nom/Modèle -->
+      <div>
+        <label class="f">Nom / Modèle de l'équipement *</label>
+        <input type="text" id="qf-nom" placeholder="ex: Fortinet FortiGate 200F, Cisco Catalyst 9300, Peplink Balance 380…" autocomplete="off">
+      </div>
+
+      <!-- Champ 2 : Catégorie (recherche + sélection) -->
+      <div>
+        <label class="f">Catégorie *</label>
+        <input type="text" id="qf-cat" list="qf-cat-list" placeholder="ex: Routage WAN, Sécurité réseau, Commutation LAN…" autocomplete="off">
+        <datalist id="qf-cat-list"></datalist>
+      </div>
+
+      <!-- Champ 3 : Type de schéma (le plus important visuellement) -->
+      <div>
+        <label class="f">Nombre de ports *</label>
+        <input type="number" id="qf-nbports" min="1" max="48" value="4">
+      </div>
+
+      <div>
+        <label class="f">Type pour le schéma *</label>
+        <select id="qf-type">
+          <option value="routeur">Routeur WAN / Edge</option>
+          <option value="routeur_cellulaire">Routeur 4G / 5G Cellulaire</option>
+          <option value="passerelle_sdwan">Passerelle SD-WAN</option>
+          <option value="pare_feu">Pare-feu NGFW (Firewall)</option>
+          <option value="pare_feu_routeur">Pare-feu / Routeur combiné</option>
+          <option value="switch_core">Switch Cœur (Core)</option>
+          <option value="switch_distribution">Switch Distribution</option>
+          <option value="switch_acces" selected>Switch Accès LAN</option>
+          <option value="switch_datacenter">Switch Datacenter</option>
+          <option value="switch_industriel">Switch Industriel</option>
+          <option value="load_balancer">Load Balancer / ADC</option>
+          <option value="point_acces_wifi">Borne Wi-Fi (AP)</option>
+          <option value="controleur_wifi">Contrôleur Wi-Fi</option>
+          <option value="serveur">Serveur physique</option>
+          <option value="stockage">Baie stockage SAN/NAS</option>
+          <option value="camera_ip">Caméra IP</option>
+          <option value="telephone_ip">Téléphone IP / VoIP</option>
+          <option value="onduleur">Onduleur / PDU</option>
+          <option value="client_pc">Poste client / PC</option>
+        </select>
+      </div>
+
+      <!-- Champs optionnels masqués par défaut -->
+      <details id="qf-advanced" style="margin-top:2px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--muted);user-select:none">▸ Champs optionnels (Fabricant, Couche OSI, Fonction…)</summary>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+          <div class="quick-add-grid">
+            <div>
+              <label class="f">Fabricant</label>
+              <input type="text" id="qf-fab" list="qf-fab-list" placeholder="ex: Cisco, Fortinet, Ubiquiti…">
+              <datalist id="qf-fab-list"></datalist>
+            </div>
+            <div>
+              <label class="f">Couche OSI</label>
+              <select id="qf-osi">
+                <option value="L2/L3" selected>L2/L3 (Switching/Routing)</option>
+                <option value="L1">L1 (Physique)</option>
+                <option value="L2">L2 (Liaison / MAC)</option>
+                <option value="L3">L3 (Réseau / IP)</option>
+                <option value="L3–L7">L3–L7 (NGFW / SD-WAN)</option>
+                <option value="L4–L7">L4–L7 (Load Balancer / WAF)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="f">Fonction principale</label>
+            <input type="text" id="qf-fonction" placeholder="ex: Routage BGP multi-WAN avec failover 5G">
+          </div>
+          <div>
+            <label class="f">Environnement</label>
+            <input type="text" id="qf-env" placeholder="ex: PME, Campus, Datacenter, Industrie" value="PME, Campus">
+          </div>
+        </div>
+      </details>
+
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border-radius:6px">
+        <input type="checkbox" id="qf-auto-add" checked style="width:auto">
+        <label for="qf-auto-add" style="font-size:12px;cursor:pointer">Ajouter immédiatement au schéma en cours</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-cancel-add-cat">Annuler</button>
+      <button class="btn primary" id="btn-submit-add-cat">💾 Enregistrer dans la base</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================
+     MODALE 2 : INSPECTION DÉTAILLÉE DE L'ÉQUIPEMENT
+     ==================================================== -->
+<div class="modal-backdrop" id="modal-inspect" style="display:none">
+  <div class="modal-card modal-card-lg">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="insp-avatar" class="insp-avatar">EQ</div>
+        <div>
+          <h3 id="insp-name" style="font-size:15.5px">Équipement</h3>
+          <div id="insp-sub" style="font-size:12px;color:var(--muted)">Fabricant · Catégorie</div>
+        </div>
+      </div>
+      <button class="btn icon" id="btn-close-inspect">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Statut -->
+      <div class="inspect-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:13px">Statut opérationnel</strong>
+          <span id="insp-status-badge" class="bs-on">🟢 EN LIGNE</span>
+        </div>
+        <div class="status-selector-row">
+          <button class="status-btn" data-set-status="online">
+            <strong><span class="status-led green"></span> En ligne</strong>
+            <small>Actif et joignable</small>
+          </button>
+          <button class="status-btn" data-set-status="offline">
+            <strong><span class="status-led red"></span> Hors ligne</strong>
+            <small>En panne ou coupé</small>
+          </button>
+          <button class="status-btn" data-set-status="maintenance">
+            <strong><span class="status-led orange"></span> Maintenance</strong>
+            <small>Intervention en cours</small>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ports -->
+      <div class="inspect-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:13px">Ports &amp; Connectivité</strong>
+          <span id="insp-ports-summary" style="font-size:12px;color:var(--muted);font-weight:600"></span>
+        </div>
+        <div style="max-height:200px;overflow-y:auto;border:1px solid var(--line);border-radius:6px">
+          <table class="ports-table" style="margin:0;font-size:12px">
+            <thead><tr>
+              <th>Port</th><th>Statut</th><th>IP</th><th>VLAN</th><th>Équipement distant</th><th>Câble</th>
+            </tr></thead>
+            <tbody id="insp-ports-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Fiche technique -->
+      <div class="inspect-box">
+        <strong style="font-size:13px;display:block;margin-bottom:8px">Fiche technique</strong>
+        <div class="spec-grid">
+          <div class="spec-item"><span class="spec-k">Catégorie</span><span class="spec-v" id="sp-cat">-</span></div>
+          <div class="spec-item"><span class="spec-k">Fabricant</span><span class="spec-v" id="sp-fab">-</span></div>
+          <div class="spec-item"><span class="spec-k">Couche OSI</span><span class="spec-v" id="sp-osi">-</span></div>
+          <div class="spec-item"><span class="spec-k">Type schéma</span><span class="spec-v" id="sp-type">-</span></div>
+          <div class="spec-item"><span class="spec-k">Environnement</span><span class="spec-v" id="sp-env">-</span></div>
+          <div class="spec-item"><span class="spec-k">Sous-catégorie</span><span class="spec-v" id="sp-souscat">-</span></div>
+          <div class="spec-item w2"><span class="spec-k">Fonction principale</span><span class="spec-v" id="sp-fonction">-</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn danger" id="btn-insp-del">🗑️ Supprimer</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="btn-insp-panel">✏️ Panneau d'édition</button>
+        <button class="btn primary" id="btn-insp-ok">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : AJOUT / MODIFICATION D'ÉQUIPEMENT -->
+<div class="modal-backdrop" id="modal-device" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="dev-modal-title">Ajouter un équipement</h3>
+      <button class="btn icon" id="btn-close-device">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="df-id">
+      <div class="quick-add-grid">
+        <div class="span2">
+          <label class="f">Nom / Hostname *</label>
+          <input type="text" id="df-name" placeholder="ex: SW-ETAGE-1, FGT-CORE, SRV-AD">
+        </div>
+        <div>
+          <label class="f">Marque</label>
+          <input type="text" id="df-fab" list="qf-fab-list" placeholder="ex: Cisco, Fortinet, Peplink">
+        </div>
+        <div>
+          <label class="f">Modèle</label>
+          <input type="text" id="df-modele" placeholder="ex: Catalyst 9200, FortiGate 100F">
+        </div>
+        <div>
+          <label class="f">Adresse IP / masque *</label>
+          <input type="text" class="mono" id="df-ip" placeholder="10.0.0.1/24">
+        </div>
+        <div>
+          <label class="f">Nombre de ports</label>
+          <input type="number" id="df-nbports" min="1" max="48" value="4">
+        </div>
+        <div class="span2">
+          <label class="f">Type pour le schéma</label>
+          <select id="df-type"></select>
+        </div>
+      </div>
+      <p class="quick-add-tip">Les ports existants sont conservés si vous modifiez un équipement. Augmenter le nombre ajoute des ports ; le diminuer n’enlève que les ports libres.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-cancel-device">Annuler</button>
+      <button class="btn primary" id="btn-submit-device">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : RELIER DEUX PORTS -->
+<div class="modal-backdrop" id="modal-wire" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Relier deux ports</h3>
+      <button class="btn icon" id="btn-close-wire">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="quick-add-grid">
+        <div>
+          <label class="f" id="wire-lab-a">Équipement A</label>
+          <select id="wire-pa"></select>
+        </div>
+        <div>
+          <label class="f" id="wire-lab-b">Équipement B</label>
+          <select id="wire-pb"></select>
+        </div>
+        <div>
+          <label class="f">Type de câble</label>
+          <select id="wire-type"></select>
+        </div>
+        <div>
+          <label class="f">Étiquette / débit</label>
+          <input type="text" id="wire-label" placeholder="ex: 10 Gb/s Trunk">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-cancel-wire">Annuler</button>
+      <button class="btn primary" id="btn-submit-wire">Créer la liaison</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : AJOUTER/ÉDITER VLAN -->
+<div class="modal-backdrop" id="modal-vlan" style="display:none">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="vlan-modal-title">Ajouter un VLAN</h3>
+      <button class="btn icon" id="btn-close-vlan">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="vf-id">
+      <div class="quick-add-grid">
+        <div>
+          <label class="f">ID VLAN *</label>
+          <input type="number" id="vf-vid" min="1" max="4094" placeholder="ex: 10">
+        </div>
+        <div>
+          <label class="f">Nom du VLAN *</label>
+          <input type="text" id="vf-name" placeholder="ex: Data, VoIP, Management">
+        </div>
+        <div class="span2">
+          <label class="f">Sous-réseau / CIDR *</label>
+          <input type="text" class="mono" id="vf-subnet" placeholder="ex: 192.168.10.0/24">
+        </div>
+        <div>
+          <label class="f">Passerelle (Gateway)</label>
+          <input type="text" class="mono" id="vf-gateway" placeholder="ex: 192.168.10.1">
+        </div>
+        <div>
+          <label class="f">Description</label>
+          <input type="text" id="vf-desc" placeholder="ex: Réseau des serveurs">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-cancel-vlan">Annuler</button>
+      <button class="btn primary" id="btn-submit-vlan">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : HISTORIQUE & RESTAURATION -->
+<div class="modal-backdrop" id="modal-history" style="display:none">
+  <div class="modal-card modal-card-lg">
+    <div class="modal-header">
+      <h3>Historique des sauvegardes</h3>
+      <button class="btn icon" id="btn-close-history">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="max-height:400px;overflow-y:auto;border:1px solid var(--line);border-radius:6px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--panel);position:sticky;top:0">
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)">#</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)">Date/Heure</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)">Taille</th>
+              <th style="padding:8px 10px;text-align:right;border-bottom:1px solid var(--line)">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+      <div id="history-loading" style="text-align:center;padding:20px;color:var(--muted)">Chargement...</div>
+      <div id="history-empty" style="text-align:center;padding:20px;color:var(--muted);display:none">Aucun historique disponible</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-history-refresh">🔄 Actualiser</button>
+      <button class="btn primary" id="btn-history-close">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : RAPPORTS TECHNIQUES -->
+<div class="modal-backdrop" id="modal-reports" style="display:none">
+  <div class="modal-card modal-card-lg">
+    <div class="modal-header">
+      <h3>Génération de rapports techniques</h3>
+      <button class="btn icon" id="btn-close-reports">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="inspect-box">
+          <strong style="font-size:13px;display:block;margin-bottom:8px">📋 Liste des équipements</strong>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Exporte la liste complète des équipements avec leurs caractéristiques et adresses IP.</p>
+          <button class="btn primary" id="btn-report-devices" style="width:100%">Générer (Excel/CSV)</button>
+        </div>
+        <div class="inspect-box">
+          <strong style="font-size:13px;display:block;margin-bottom:8px">🔌 Tableau des ports & connexions</strong>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Exporte le détail de tous les ports et leurs liaisons câblées.</p>
+          <button class="btn primary" id="btn-report-ports" style="width:100%">Générer (Excel/CSV)</button>
+        </div>
+        <div class="inspect-box">
+          <strong style="font-size:13px;display:block;margin-bottom:8px">🏷️ Liste des VLAN & sous-réseaux</strong>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Exporte la configuration VLAN et les sous-réseaux associés.</p>
+          <button class="btn primary" id="btn-report-vlan" style="width:100%">Générer (Excel/CSV)</button>
+        </div>
+        <div class="inspect-box">
+          <strong style="font-size:13px;display:block;margin-bottom:8px">📊 Rapport complet (CSV)</strong>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Exporte un fichier unique avec équipements, VLAN et connexions.</p>
+          <button class="btn primary" id="btn-report-full" style="width:100%">Générer CSV</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-reports-close">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : LIAISON GLPI -->
+<div class="modal-backdrop" id="modal-glpi" style="display:none">
+  <div class="modal-card modal-card-lg">
+    <div class="modal-header">
+      <h3>Paramétrage GLPI</h3>
+      <button class="btn icon" id="btn-close-glpi">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="quick-add-grid">
+        <div>
+          <label class="f">Adresse IP du serveur GLPI *</label>
+          <input type="text" class="mono" id="gs-host" placeholder="ex: 192.168.127.128" autocomplete="off">
+        </div>
+        <div>
+          <label class="f">Port *</label>
+          <input type="number" id="gs-port" min="1" max="65535" value="80">
+        </div>
+        <div>
+          <label class="f">Jeton d'application (App-Token) *</label>
+          <input type="password" class="mono" id="gs-app" autocomplete="new-password">
+        </div>
+        <div>
+          <label class="f">Jeton utilisateur (user token) *</label>
+          <input type="password" class="mono" id="gs-usr" autocomplete="new-password">
+        </div>
+        <div class="span2">
+          <label class="f">Types à ajouter au catalogue</label>
+          <div id="gs-cats" style="display:flex;flex-wrap:wrap;gap:14px;font-size:13px"></div>
+        </div>
+        <div>
+          <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="gs-auto" style="width:auto"> Synchronisation automatique</label>
+        </div>
+        <div>
+          <label class="f">Vérifier GLPI toutes les</label>
+          <select id="gs-interval"><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="30">30 minutes</option><option value="60">1 heure</option></select>
+        </div>
+        <div class="span2">
+          <details>
+            <summary style="cursor:pointer;font-size:12.5px;color:var(--muted)">Options avancées</summary>
+            <div class="quick-add-grid" style="margin-top:8px">
+              <div><label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="gs-https" style="width:auto"> Connexion sécurisée (HTTPS)</label></div>
+              <div><label class="f">Chemin de l'API</label><input type="text" class="mono" id="gs-path" value="/glpi/apirest.php"></div>
+            </div>
+          </details>
+        </div>
+      </div>
+      <div id="glpi-msg" style="font-size:13px;margin-top:12px;min-height:20px;color:var(--muted)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="btn-glpi-test">Tester la connexion</button>
+      <button class="btn" id="btn-glpi-sync">Synchroniser maintenant</button>
+      <button class="btn primary" id="btn-glpi-save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="catalog.js"></script>
+<script>
+(function(){
+"use strict";
+
+const API = (location.protocol==="http:"||location.protocol==="https:") ? location.origin+"/api" : "http://localhost:3737/api";
+let serverAvailable = false;
+
+// ============================================================================
+// CONSTANTES VISUELLES
+// ============================================================================
+const LAYER_MAP = {
+  internet_cloud:0,routeur:0,routeur_cellulaire:0,passerelle_sdwan:0,passerelle:0,ont_onu:0,modem:0,modem_cellulaire:0,
+  pare_feu:1,pare_feu_routeur:1,load_balancer:1,waf:1,nac:1,
+  switch_core:2,switch_distribution:2,
+  switch_acces:3,switch_datacenter:3,switch_industriel:3,
+  point_acces_wifi:4,controleur_wifi:4,controleur_reseau:4,serveur_gestion:4,
+  serveur:5,serveur_reseau:5,hote_virtualisation:5,stockage:5,
+  client_pc:6,telephone_ip:6,camera_ip:6,printer:6,onduleur:6,passerelle_voip:6,passerelle_industrielle:6
+};
+const COLOR_MAP = {
+  routeur:"#c9741f",routeur_cellulaire:"#d97706",passerelle_sdwan:"#ea580c",
+  pare_feu:"#bf3a30",pare_feu_routeur:"#dc2626",load_balancer:"#b91c1c",waf:"#991b1b",nac:"#be123c",
+  switch_core:"#26688f",switch_distribution:"#1e40af",switch_acces:"#2f8470",switch_datacenter:"#0f766e",switch_industriel:"#047857",
+  point_acces_wifi:"#0284c7",controleur_wifi:"#0284c7",controleur_reseau:"#0369a1",
+  serveur:"#6a56a5",serveur_reseau:"#7c3aed",hote_virtualisation:"#5b21b6",stockage:"#9333ea",
+  client_pc:"#0284c7",telephone_ip:"#4f46e5",camera_ip:"#0891b2",onduleur:"#0e7490",passerelle_voip:"#6366f1"
+};
+const CABLE_TYPES = {
+  "fiber-10g": {label:"Fibre 10G SFP+ (Cyan)",color:"#00a8cc"},
+  "fiber-smf": {label:"Fibre Monomode 40G (Jaune)",color:"#eab308"},
+  "copper-cat6":{label:"Cuivre RJ45 Cat6 1Gb/s (Bleu)",color:"#2563eb"},
+  "copper-dac": {label:"DAC 10G Direct Attach (Gris)",color:"#475569"},
+  "wan-link":   {label:"Liaison WAN / BGP (Orange)",color:"#d97706"},
+  "mgmt-link":  {label:"Console / Management (Vert)",color:"#16a34a"}
+};
+const TYPE_OPTIONS = [
+  ["routeur","Routeur WAN / Edge"],["routeur_cellulaire","Routeur 4G / 5G"],
+  ["passerelle_sdwan","Passerelle SD-WAN"],["pare_feu","Pare-feu NGFW"],
+  ["pare_feu_routeur","Pare-feu / Routeur"],["switch_core","Switch Cœur"],
+  ["switch_distribution","Switch Distribution"],["switch_acces","Switch Accès LAN"],
+  ["switch_datacenter","Switch Datacenter"],["switch_industriel","Switch Industriel"],
+  ["load_balancer","Load Balancer / ADC"],["point_acces_wifi","Borne Wi-Fi (AP)"],
+  ["controleur_wifi","Contrôleur Wi-Fi"],["serveur","Serveur physique"],
+  ["stockage","Baie stockage SAN/NAS"],["camera_ip","Caméra IP"],
+  ["telephone_ip","Téléphone IP / VoIP"],["onduleur","Onduleur / PDU"],
+  ["client_pc","Poste client / PC"]
+];
+function typeOptionsHtml(sel){
+  return TYPE_OPTIONS.map(([v,l])=>`<option value="${v}"${v===sel?" selected":""}>${l}</option>`).join("");
+}
+const PAL={
+  light:{bg:"#f2f3ee",card:"#fff",ink:"#1d2630",muted:"#66707b",line:"#8a949e",sel:"#1f5f8b",halo:"#f2f3ee",grid:"#d5d8d0"},
+  dark:{bg:"#10141a",card:"#1b2128",ink:"#e4e8ec",muted:"#8c97a3",line:"#6d7884",sel:"#6cb2e0",halo:"#10141a",grid:"#232b34"}
+};
+const H=66,GAPX=36,GAPY=170;
+const FONT="IBM Plex Sans,system-ui,sans-serif";
+const MONO="IBM Plex Mono,Consolas,monospace";
+
+let state={devices:[],links:[],vlans:[]};
+let sel=null,tab="devices",view={x:0,y:0,k:1},lf={a:"",b:"",pa:"",pb:"",cableType:"copper-cat6",label:""};
+let drag=null,inspectedId=null;
+let showLabels=true,wireMode=false,wireFrom=null,wirePair=null;
+
+const $=s=>document.querySelector(s);
+const svg=$("#cv"),panel=$("#panel");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const csvCell=s=>{const t=String(s==null?"":s);return /[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t;};
+const schemaPayload=()=>({devices:state.devices,links:state.links,vlans:state.vlans,glpiSeen:state.glpiSeen||[]});
+const isIPv4=s=>{const m=/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(String(s||"").trim());return !!m&&m.slice(1).every(n=>Number(n)<=255);};
+const ip2int=s=>String(s).trim().split(".").reduce((a,n)=>a*256+Number(n),0);
+function parseCidr(c){const m=/^(.+)\/(\d{1,2})$/.exec(String(c||"").trim());if(!m||!isIPv4(m[1])||Number(m[2])>32)return null;const bits=Number(m[2]),size=Math.pow(2,32-bits);const start=Math.floor(ip2int(m[1])/size)*size;return{start,end:start+size-1};}
+const ipKey=s=>String(s||"").trim().toLowerCase().split("/")[0];
+const uid=()=>"x"+Math.random().toString(36).slice(2,9);
+const dev=id=>state.devices.find(d=>d.id===id);
+const layer=d=>LAYER_MAP[d.typeSchema]!=null?LAYER_MAP[d.typeSchema]:3;
+const nat=(a,b)=>String(a).localeCompare(String(b),"fr",{numeric:true});
+
+// ============================================================================
+// PERSISTANCE : SERVEUR LOCAL + FALLBACK LOCALSTORAGE
+// ============================================================================
+const LS_KEY = "netarch_v3_fallback";
+let saveTimer=null;
+
+async function checkServer(){
+  try {
+    const r = await fetch(`${API}/schema`, {signal: AbortSignal.timeout(1500)});
+    if(r.ok) { serverAvailable=true; return true; }
+  } catch(e) {}
+  serverAvailable=false;
+  return false;
+}
+
+function setSaveStatus(status, text){
+  const dot=$("#save-dot"), txt=$("#save-text");
+  if(!dot||!txt) return;
+  dot.classList.toggle("saving", status==="saving");
+  txt.textContent=text;
+}
+
+function triggerSave(){
+  setSaveStatus("saving","Sauvegarde…");
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(doSave, 400);
+}
+
+async function doSave(){
+  const payload=schemaPayload();
+
+  if(serverAvailable){
+    try {
+      const r=await fetch(`${API}/schema`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload),
+        signal:AbortSignal.timeout(3000)
+      });
+      if(r.ok){
+        const d=new Date();
+        const t=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0");
+        setSaveStatus("ok","Sauvegardé sur disque ("+t+")");
+        // Aussi en localStorage comme cache local
+        try{ localStorage.setItem(LS_KEY, JSON.stringify(payload)); }catch(e){}
+        return;
+      }
+    }catch(e){}
+    // Serveur devenu inaccessible
+    serverAvailable=false;
+    $("#server-banner").classList.add("visible");
+  }
+
+  // Fallback localStorage
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    setSaveStatus("ok","Sauvegardé (local navigateur uniquement)");
+  }catch(e){
+    setSaveStatus("ok","Impossible de sauvegarder");
+  }
+}
+
+async function loadSavedState(){
+  // 1. Essayer le serveur
+  if(serverAvailable){
+    try{
+      const r=await fetch(`${API}/schema`,{signal:AbortSignal.timeout(2000)});
+      if(r.ok){
+        const data=await r.json();
+        if(data.ok && data.schema && Array.isArray(data.schema.devices)){
+          state.devices=data.schema.devices.map(d=>({...d,status:d.status||"online"}));
+          state.links=data.schema.links||[];
+          state.vlans=data.schema.vlans||[];
+          state.glpiSeen=data.schema.glpiSeen||[];
+          setSaveStatus("ok","Projet chargé depuis le disque");
+          return true;
+        }
+      }
+    }catch(e){}
+  }
+  
+  // 2. Fallback localStorage
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      if(Array.isArray(parsed.devices)&&parsed.devices.length>0){
+        state.devices=parsed.devices.map(d=>({...d,status:d.status||"online"}));
+        state.links=parsed.links||[];
+        state.vlans=parsed.vlans||[];
+        state.glpiSeen=parsed.glpiSeen||[];
+        setSaveStatus("ok","Projet chargé (cache navigateur)");
+        return true;
+      }
+    }
+  }catch(e){}
+  
+  return false;
+}
+
+// ============================================================================
+// CATALOGUE
+// ============================================================================
+function initCatalogFilters(){
+  const cats=[...new Set(NETWORK_CATALOG.map(c=>c.categorie))].filter(Boolean).sort();
+  const fabs=[...new Set(NETWORK_CATALOG.map(c=>c.fabricant))].filter(Boolean).sort();
+  
+  $("#filter-cat").innerHTML=`<option value="">Toutes les catégories (${cats.length})</option>`+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  $("#filter-fab").innerHTML=`<option value="">Tous les fabricants (${fabs.length})</option>`+fabs.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join("");
+  
+  // Datalists pour le formulaire rapide
+  const dlCat=$("#qf-cat-list");
+  if(dlCat) dlCat.innerHTML=cats.map(c=>`<option value="${esc(c)}">`).join("");
+  const dlFab=$("#qf-fab-list");
+  if(dlFab) dlFab.innerHTML=fabs.map(f=>`<option value="${esc(f)}">`).join("");
+
+  $("#section-catalog #cat-count").textContent=NETWORK_CATALOG.length;
+  $("#nav-cat-count").textContent=NETWORK_CATALOG.length;
+  $("#section-catalog #filter-cat").onchange=renderCatalogTable;
+  $("#section-catalog #filter-fab").onchange=renderCatalogTable;
+  $("#section-catalog #filter-search").oninput=renderCatalogTable;
+  $("#section-catalog #filter-reset").onclick=()=>{
+    $("#section-catalog #filter-cat").value="";
+    $("#section-catalog #filter-fab").value="";
+    $("#section-catalog #filter-search").value="";
+    renderCatalogTable();
+  };
+}
+
+function renderCatalogTable(){
+  const fCat=$("#filter-cat").value.toLowerCase();
+  const fFab=$("#filter-fab").value.toLowerCase();
+  const fTxt=$("#filter-search").value.toLowerCase().trim();
+  const tbody=$("#section-catalog #catalog-tbody");
+  if(!tbody) return;
+  tbody.innerHTML="";
+
+  const filtered=NETWORK_CATALOG.filter(item=>{
+    if(fCat&&(item.categorie||"").toLowerCase()!==fCat) return false;
+    if(fFab&&(item.fabricant||"").toLowerCase()!==fFab) return false;
+    if(fTxt){
+      const hay=[item.categorie,item.sousCategorie,item.fabricant,item.fonction,item.environnement,item.typeSchema].map(x=>(x||"").toLowerCase()).join(" ");
+      if(!hay.includes(fTxt)) return false;
+    }
+    return true;
+  });
+
+  if(!filtered.length){
+    const tr=document.createElement("tr");
+    const query=fTxt||fCat||fFab||"ce critère";
+    tr.innerHTML=`<td colspan="8" style="text-align:center;padding:24px 14px;background:var(--panel)">
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">🔍 Aucun résultat pour « ${esc(query)} »</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Cette référence n'existe pas dans la base. Vous pouvez l'ajouter.</div>
+      <button class="btn primary" id="btn-no-result-add">+ Ajouter « ${esc(fTxt||"Nouvelle référence")} »</button>
+    </td>`;
+    tbody.appendChild(tr);
+    const btn=tbody.querySelector("#btn-no-result-add");
+    if(btn) btn.onclick=()=>openAddCat(fTxt);
+    return;
+  }
+
+  filtered.forEach(item=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><button class="btn primary" style="padding:2px 8px;font-size:11px" data-add-cat="${item.id}">+ Ajouter</button></td>
+      <td><strong>${esc(item.categorie)}</strong></td>
+      <td>${esc(item.sousCategorie)}</td>
+      <td>${esc(item.fabricant)}</td>
+      <td style="max-width:260px">${esc(item.fonction)}</td>
+      <td><span class="badge-osi">${esc(item.coucheOSI)}</span></td>
+      <td>${catalogPortCount(item)}</td>
+      <td><span class="badge-type">${esc(item.typeSchema)}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+$("#section-catalog #catalog-tbody").addEventListener("click",e=>{
+  const b=e.target.closest("[data-add-cat]"); if(!b) return;
+  const item=NETWORK_CATALOG.find(c=>c.id===b.dataset.addCat); if(!item) return;
+  addDeviceFromCatalogItem(item);
+});
+
+function defaultPorts(typeSchema){
+  if(typeSchema==="routeur") return [["WAN1",""],["LAN1",""]];
+  if(typeSchema==="pare_feu"||typeSchema==="pare_feu_routeur") return [["wan1",""],["wan2",""],["port1 (LAN)",""],["dmz",""]];
+  if(typeSchema==="switch_core") return [["TenGi1/0/1",""],["TenGi1/0/2",""],["TenGi1/0/3",""],["TenGi1/0/4",""]];
+  if(typeSchema==="switch_acces") return [["Gi0/1 (Uplink)",""],["Gi0/2",""],["Gi0/3",""],["Gi0/4",""]];
+  if(typeSchema==="serveur") return [["eth0 (LAN)",""],["iDRAC/iLO",""]];
+  if(typeSchema==="point_acces_wifi") return [["Eth0 (PoE In)",""]];
+  return [["Port 1",""],["Port 2",""]];
+}
+function catalogPortCount(item){
+  if(item.nbPorts) return Number(item.nbPorts);
+  if(Array.isArray(item.portsDefaut)&&item.portsDefaut.length) return item.portsDefaut.length;
+  return defaultPorts(item.typeSchema).length;
+}
+function numberedPorts(typeSchema, n, existing){
+  const base = defaultPorts(typeSchema).map(([name])=>({name,ip:"",vlan:""}));
+  const src = Array.isArray(existing)&&existing.length?existing.slice():base;
+  const count = Math.max(1, Math.min(48, Number(n)||src.length||2));
+  const out = src.slice(0, count).map(p=>({name:p.name,ip:p.ip||"",vlan:p.vlan||""}));
+  while(out.length<count) out.push({name:"Port "+(out.length+1),ip:"",vlan:""});
+  return out;
+}
+function portIsUsed(d, portName){
+  return state.links.some(l=>(l.a.d===d.id&&l.a.p===portName)||(l.b.d===d.id&&l.b.p===portName));
+}
+function shrinkPorts(d, n){
+  const count = Math.max(1, Math.min(48, Number(n)||d.ports.length));
+  if(count>=d.ports.length) return numberedPorts(d.typeSchema, count, d.ports);
+  const keep=[], drop=[];
+  d.ports.forEach(p=>{ (portIsUsed(d,p.name)?keep:drop).push(p); });
+  const needDrop = d.ports.length-count;
+  const removable = drop.slice(-Math.max(0,needDrop));
+  const removableNames = new Set(removable.map(p=>p.name));
+  return d.ports.filter(p=>!removableNames.has(p.name));
+}
+
+function addDeviceFromCatalogItem(item){
+  const n = catalogPortCount(item);
+  const ports = Array.isArray(item.portsDefaut)&&item.portsDefaut.length
+    ? numberedPorts(item.typeSchema, n, item.portsDefaut.map(p=>({name:p.name||p,ip:p.ip||"",vlan:p.vlan||""})))
+    : numberedPorts(item.typeSchema, n);
+  state.devices.push({
+    id:uid(), name:`${item.fabricant} - ${item.sousCategorie}`,
+    ip:`10.0.${state.devices.length+1}.1/24`, status:"online",
+    categorie:item.categorie, sousCategorie:item.sousCategorie,
+    fabricant:item.fabricant, modele:item.sousCategorie||"", fonction:item.fonction,
+    coucheOSI:item.coucheOSI, environnement:item.environnement,
+    caracteristiques:item.caracteristiques||"", typeSchema:item.typeSchema,
+    ports
+  });
+  renderFormView();
+  triggerSave();
+  toast(`"${item.fabricant} - ${item.sousCategorie}" ajouté.`);
+}
+
+// ============================================================================
+// MODALE AJOUT SIMPLIFIÉ
+// ============================================================================
+function openAddCat(prefill=""){
+  const m=$("#modal-add-cat"); if(!m) return;
+  m.style.display="flex";
+  if(prefill){ $("#qf-nom").value=prefill; } else { $("#qf-nom").value=""; }
+  $("#qf-cat").value=""; $("#qf-fonction").value=""; $("#qf-env").value="PME, Campus";
+  if($("#qf-nbports")) $("#qf-nbports").value=4;
+  // Auto-select type by prefill guess
+  if(/firewall|fortigate|pare.feu|paloalto|checkpoint|sophos/i.test(prefill)) $("#qf-type").value="pare_feu";
+  else if(/switch|catalyst|nexus|aruba|procurve/i.test(prefill)) $("#qf-type").value="switch_acces";
+  else if(/routeur|peplink|meraki|router|edgerouter/i.test(prefill)) $("#qf-type").value="routeur";
+  else if(/wifi|ap |access.point|unifi|ubiquiti/i.test(prefill)) $("#qf-type").value="point_acces_wifi";
+  else if(/server|serveur|hpe|dell|proxliant/i.test(prefill)) $("#qf-type").value="serveur";
+}
+
+function closeAddCat(){ const m=$("#modal-add-cat"); if(m) m.style.display="none"; }
+
+$("#btn-open-add-cat").onclick=()=>openAddCat();
+$("#btn-close-add-cat").onclick=closeAddCat;
+$("#btn-cancel-add-cat").onclick=closeAddCat;
+
+$("#btn-submit-add-cat").onclick=async()=>{
+  const nom=$("#qf-nom").value.trim();
+  const cat=$("#qf-cat").value.trim();
+  const typeSchema=$("#qf-type").value;
+  
+  if(!nom||!cat){
+    alert("Veuillez renseigner le Nom/Modèle et la Catégorie (champs obligatoires).");
+    return;
+  }
+  
+  const fab=$("#qf-fab").value.trim()||"(Fabricant inconnu)";
+  const osi=$("#qf-osi").value;
+  const fonction=$("#qf-fonction").value.trim()||`Équipement de type ${typeSchema.replace(/_/g," ")}`;
+  const env=$("#qf-env").value.trim()||"PME, Campus";
+  
+  // Dériver la sous-catégorie du type
+  const subCatMap={
+    routeur:"Routeur WAN/Edge", routeur_cellulaire:"Routeur 4G/5G",
+    passerelle_sdwan:"Passerelle SD-WAN", pare_feu:"Pare-feu NGFW",
+    pare_feu_routeur:"Pare-feu / Routeur", switch_core:"Switch Cœur",
+    switch_distribution:"Switch Distribution", switch_acces:"Switch Accès LAN",
+    switch_datacenter:"Switch Datacenter", switch_industriel:"Switch Industriel",
+    load_balancer:"Load Balancer", point_acces_wifi:"Borne Wi-Fi AP",
+    controleur_wifi:"Contrôleur Wi-Fi", serveur:"Serveur physique",
+    stockage:"Stockage SAN/NAS", camera_ip:"Caméra IP",
+    telephone_ip:"Téléphone IP", onduleur:"Onduleur/PDU", client_pc:"Poste client"
+  };
+
+  const nbPorts=Math.max(1, Math.min(48, Number($("#qf-nbports").value)||4));
+  const newEntry={
+    id:"CUSTOM-"+uid(), categorie:cat, sousCategorie:subCatMap[typeSchema]||cat,
+    fabricant:fab, fonction:fonction, coucheOSI:osi, environnement:env,
+    caracteristiques:"Vérifier les spécifications du constructeur", typeSchema:typeSchema,
+    nbPorts, portsDefaut:numberedPorts(typeSchema, nbPorts)
+  };
+
+  // Sauvegarder dans le serveur ou localStorage
+  await saveCustomCatalogEntry(newEntry);
+
+  // Ajouter au catalogue en mémoire
+  NETWORK_CATALOG.push(newEntry);
+  initCatalogFilters();
+  renderCatalogTable();
+
+  if($("#qf-auto-add").checked){
+    state.devices.push({
+      id:uid(), name:nom, ip:`10.0.${state.devices.length+1}.1/24`, status:"online",
+      categorie:cat, sousCategorie:newEntry.sousCategorie,
+      fabricant:fab, modele:nom, fonction:fonction, coucheOSI:osi, environnement:env,
+      caracteristiques:newEntry.caracteristiques, typeSchema:typeSchema,
+      ports:numberedPorts(typeSchema, nbPorts)
+    });
+    renderFormView();
+  }
+
+  triggerSave();
+  closeAddCat();
+  toast(`"${nom}" ajouté à la base !`);
+};
+
+function mergeCustomCatalog(entries){
+  if(!Array.isArray(entries)) return;
+  const seen=new Set(NETWORK_CATALOG.map(c=>c.id));
+  entries.forEach(e=>{
+    if(e&&e.id&&!seen.has(e.id)){ NETWORK_CATALOG.push(e); seen.add(e.id); }
+  });
+}
+function persistCustomCatalogLocal(entry){
+  try{
+    const raw=localStorage.getItem("netarch_custom_catalog_v3")||"[]";
+    const arr=JSON.parse(raw);
+    if(!arr.some(x=>x&&x.id===entry.id)) arr.push(entry);
+    localStorage.setItem("netarch_custom_catalog_v3",JSON.stringify(arr));
+    localStorage.removeItem("netarch_custom_catalog_entries");
+  }catch(e){}
+}
+
+async function saveCustomCatalogEntry(entry){
+  if(serverAvailable){
+    try{
+      const r=await fetch(`${API}/catalog/custom`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(entry),
+        signal:AbortSignal.timeout(2000)
+      });
+      if(r.ok) return;
+    }catch(e){}
+  }
+  persistCustomCatalogLocal(entry);
+}
+
+async function loadCustomCatalog(){
+  if(serverAvailable){
+    try{
+      const r=await fetch(`${API}/catalog/custom`,{signal:AbortSignal.timeout(2000)});
+      if(r.ok){
+        const data=await r.json();
+        if(data.ok&&Array.isArray(data.entries)&&data.entries.length>0){
+          mergeCustomCatalog(data.entries);
+          return;
+        }
+      }
+    }catch(e){}
+  }
+  try{
+    const v3=JSON.parse(localStorage.getItem("netarch_custom_catalog_v3")||"[]");
+    const legacy=JSON.parse(localStorage.getItem("netarch_custom_catalog_entries")||"[]");
+    mergeCustomCatalog([...legacy,...v3]);
+  }catch(e){}
+}
+
+// ============================================================================
+// FORMULAIRE D'ARCHITECTURE
+// ============================================================================
+function renderFormView(){
+  renderFormDevices();
+  renderFormVlans();
+  renderFormCables();
+  $("#section-devices #count-dev").textContent=state.devices.length;
+  $("#section-cables #count-links").textContent=state.links.length;
+  $("#section-vlan #count-vlan").textContent=state.vlans.length;
+
+  // Mettre à jour les badges de navigation
+  $("#nav-dev-count").textContent=state.devices.length;
+  $("#nav-vlan-count").textContent=state.vlans.length;
+  $("#nav-link-count").textContent=state.links.length;
+
+  // Vérifier les IP en double
+  const duplicates=checkDuplicateIps();
+  const alert=$("#section-vlan #ip-conflict-alert");
+  const alertText=$("#section-vlan #ip-conflict-text");
+  if(duplicates.length){
+    alert.style.display="block";
+    alertText.textContent=duplicates.map(d=>`${d.ip} (${d.device1}/${d.port} ↔ ${d.device2})`).join(", ");
+  } else {
+    alert.style.display="none";
+  }
+}
+
+function statusBadgeHtml(st){
+  if(st==="offline") return `<span class="bs-off">🔴 Hors ligne</span>`;
+  if(st==="maintenance") return `<span class="bs-maint">🟠 Maintenance</span>`;
+  return `<span class="bs-on">🟢 En ligne</span>`;
+}
+
+function renderFormDevices(){
+  const container=$("#section-devices #form-device-list"); if(!container) return;
+  container.innerHTML="";
+  if(!state.devices.length){
+    container.innerHTML=`<div style="padding:16px;color:var(--muted);text-align:center;background:var(--bg);border-radius:8px">
+      Aucun équipement. Cliquez sur « + Ajouter libre ».
+    </div>`;
+    return;
+  }
+  state.devices.forEach(d=>{
+    const card=document.createElement("div");
+    card.className="device-form-card";
+    const st=d.status||"online";
+    card.innerHTML=`
+      <div class="device-db-info-bar">
+        <span>${esc(d.categorie||"Réseau")}</span>
+        <span style="color:var(--muted)">·</span>
+        <span><span class="badge-osi">${esc(d.coucheOSI||"L3")}</span></span>
+        <span><span class="badge-type">${esc(d.typeSchema||"switch_acces")}</span></span>
+        <span>${statusBadgeHtml(st)}</span>
+        <span style="color:var(--muted);font-size:11px;margin-left:auto">${esc(d.fabricant||"")} ${esc(d.sousCategorie||"")}</span>
+      </div>
+      <div class="device-form-row">
+        <div>
+          <label class="f">Nom / Hostname</label>
+          <input type="text" data-dev-name="${d.id}" value="${esc(d.name)}">
+        </div>
+        <div>
+          <label class="f">Marque</label>
+          <input type="text" data-dev-fab="${d.id}" value="${esc(d.fabricant||"")}">
+        </div>
+        <div>
+          <label class="f">Modèle</label>
+          <input type="text" data-dev-modele="${d.id}" value="${esc(d.modele||d.sousCategorie||"")}">
+        </div>
+        <div>
+          <label class="f">Adresse IP / Masque</label>
+          <input type="text" class="mono" data-dev-ip="${d.id}" value="${esc(d.ip)}">
+        </div>
+        <div>
+          <label class="f">Statut</label>
+          <select data-dev-status="${d.id}">
+            <option value="online" ${st==="online"?"selected":""}>🟢 En ligne</option>
+            <option value="offline" ${st==="offline"?"selected":""}>🔴 Hors ligne</option>
+            <option value="maintenance" ${st==="maintenance"?"selected":""}>🟠 Maintenance</option>
+          </select>
+        </div>
+        <div style="padding-top:16px;display:flex;gap:4px">
+          <button class="btn icon" data-edit-dev="${d.id}" title="Modifier">✎</button>
+          <button class="btn danger icon" data-del-dev="${d.id}" title="Supprimer">×</button>
+        </div>
+      </div>
+      <div class="device-ports-box">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;font-weight:600;color:var(--muted)">Ports / Interfaces</span>
+          <button class="btn" style="padding:2px 8px;font-size:11px" data-add-port="${d.id}">+ Port</button>
+        </div>
+        <table class="ports-table">
+          <thead><tr><th>Nom du port</th><th>IP / Masque</th><th>VLAN</th><th></th></tr></thead>
+          <tbody>${(d.ports||[]).map((p,i)=>`
+            <tr>
+              <td><input type="text" data-p-name="${d.id}" data-p-idx="${i}" value="${esc(p.name)}" style="padding:3px 6px"></td>
+              <td><input type="text" class="mono" data-p-ip="${d.id}" data-p-idx="${i}" value="${esc(p.ip)}" placeholder="10.0.0.1/24" style="padding:3px 6px"></td>
+              <td><input type="text" data-p-vlan="${d.id}" data-p-idx="${i}" value="${esc(p.vlan)}" placeholder="VLAN" style="padding:3px 6px;width:70px"></td>
+              <td><button class="btn danger icon" data-del-port="${d.id}" data-p-idx="${i}" style="width:22px;height:22px;font-size:12px">×</button></td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function renderFormVlans(){
+  const container=$("#section-vlan #form-vlan-list"); if(!container) return;
+  container.innerHTML="";
+  if(!state.vlans.length){
+    container.innerHTML=`<div style="padding:16px;color:var(--muted);text-align:center;background:var(--bg);border-radius:8px">
+      Aucun VLAN configuré. Cliquez sur « + Ajouter VLAN ».
+    </div>`;
+    return;
+  }
+  state.vlans.forEach(v=>{
+    const row=document.createElement("div");
+    row.className="vlan-form-row";
+    row.innerHTML=`
+      <div>
+        <label class="f">ID VLAN</label>
+        <strong style="font-size:14px;color:var(--accent)">${esc(v.vid)}</strong>
+      </div>
+      <div>
+        <label class="f">Nom</label>
+        <strong>${esc(v.name)}</strong>
+      </div>
+      <div>
+        <label class="f">Sous-réseau</label>
+        <span class="mono" style="font-size:12px">${esc(v.subnet)}</span>
+      </div>
+      <div>
+        <label class="f">Passerelle</label>
+        <span class="mono" style="font-size:12px">${esc(v.gateway||"—")}</span>
+      </div>
+      <div style="padding-top:14px;display:flex;gap:4px">
+        <button class="btn icon" data-edit-vlan="${v.id}" title="Modifier">✎</button>
+        <button class="btn danger icon" data-del-vlan="${v.id}" title="Supprimer">×</button>
+      </div>`;
+    container.appendChild(row);
+  });
+}
+
+function checkDuplicateIps(){
+  const ipMap=new Map();
+  const duplicates=[];
+  state.devices.forEach(d=>{
+    (d.ports||[]).forEach(p=>{
+      const key=ipKey(p.ip);
+      if(!isIPv4(key)) return;
+      const existing=ipMap.get(key);
+      if(existing&&existing.device===d.name&&existing.port===p.name) return;
+      if(existing){
+        duplicates.push({ip:p.ip, device1:existing.device, device2:d.name, port:p.name});
+      } else {
+        ipMap.set(key,{device:d.name,port:p.name});
+      }
+    });
+  });
+  return duplicates;
+}
+
+function renderFormCables(){
+  const container=$("#section-cables #form-cable-list"); if(!container) return;
+  container.innerHTML="";
+  if(!state.links.length){
+    container.innerHTML=`<div style="padding:16px;color:var(--muted);text-align:center;background:var(--bg);border-radius:8px">
+      Aucune liaison câblée. Cliquez sur « + Ajouter liaison ».
+    </div>`;
+    return;
+  }
+  const devOpts=cur=>state.devices.map(d=>`<option value="${d.id}" ${d.id===cur?"selected":""}>${esc(d.name)}</option>`).join("");
+  const portOpts=(dId,cur)=>{ const d=dev(dId); if(!d||!d.ports) return `<option value="">Port…</option>`; return d.ports.map(p=>`<option value="${esc(p.name)}" ${p.name===cur?"selected":""}>${esc(p.name)}</option>`).join(""); };
+
+  state.links.forEach(l=>{
+    const row=document.createElement("div");
+    row.className="cable-form-row";
+    row.innerHTML=`
+      <div>
+        <label class="f">Extrémité A</label>
+        <div style="display:flex;gap:4px">
+          <select data-cable-da="${l.id}" style="flex:1.4">${devOpts(l.a.d)}</select>
+          <select data-cable-pa="${l.id}" style="flex:1">${portOpts(l.a.d,l.a.p)}</select>
+        </div>
+      </div>
+      <div>
+        <label class="f">Extrémité B</label>
+        <div style="display:flex;gap:4px">
+          <select data-cable-db="${l.id}" style="flex:1.4">${devOpts(l.b.d)}</select>
+          <select data-cable-pb="${l.id}" style="flex:1">${portOpts(l.b.d,l.b.p)}</select>
+        </div>
+      </div>
+      <div>
+        <label class="f">Type de câble</label>
+        <select data-cable-type="${l.id}">
+          ${Object.keys(CABLE_TYPES).map(k=>`<option value="${k}" ${(l.cableType||"copper-cat6")===k?"selected":""}>${CABLE_TYPES[k].label}</option>`).join("")}
+        </select>
+      </div>
+      <div>
+        <label class="f">Étiquette / Débit</label>
+        <input type="text" data-cable-lbl="${l.id}" value="${esc(l.label||"")}" placeholder="ex: 10 Gb/s Trunk">
+      </div>
+      <div style="padding-top:14px">
+        <button class="btn danger icon" data-del-link="${l.id}">×</button>
+      </div>`;
+    container.appendChild(row);
+  });
+}
+
+// Événements formulaire
+$("#view-form").addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.cableDa){ const l=state.links.find(x=>x.id===t.dataset.cableDa); if(l){l.a.d=t.value;const d=dev(t.value);l.a.p=d&&d.ports[0]?d.ports[0].name:"";renderFormCables();triggerSave();}}
+  else if(t.dataset.cableDb){ const l=state.links.find(x=>x.id===t.dataset.cableDb); if(l){l.b.d=t.value;const d=dev(t.value);l.b.p=d&&d.ports[0]?d.ports[0].name:"";renderFormCables();triggerSave();}}
+  else if(t.dataset.cablePa){ const l=state.links.find(x=>x.id===t.dataset.cablePa); if(l){l.a.p=t.value;triggerSave();}}
+  else if(t.dataset.cablePb){ const l=state.links.find(x=>x.id===t.dataset.cablePb); if(l){l.b.p=t.value;triggerSave();}}
+  else if(t.dataset.cableType){ const l=state.links.find(x=>x.id===t.dataset.cableType); if(l){l.cableType=t.value;triggerSave();}}
+  else if(t.dataset.devStatus){ const d=dev(t.dataset.devStatus); if(d){d.status=t.value;renderFormDevices();triggerSave();}}
+});
+
+$("#view-form").addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.devName){ const d=dev(t.dataset.devName); if(d){d.name=t.value;triggerSave();}}
+  else if(t.dataset.devFab){ const d=dev(t.dataset.devFab); if(d){d.fabricant=t.value;triggerSave();}}
+  else if(t.dataset.devModele){ const d=dev(t.dataset.devModele); if(d){d.modele=t.value;triggerSave();}}
+  else if(t.dataset.devIp){ const d=dev(t.dataset.devIp); if(d){d.ip=t.value;triggerSave();}}
+  else if(t.dataset.pName){ const d=dev(t.dataset.pName); if(d&&d.ports[+t.dataset.pIdx]){d.ports[+t.dataset.pIdx].name=t.value;triggerSave();}}
+  else if(t.dataset.pIp){ const d=dev(t.dataset.pIp); if(d&&d.ports[+t.dataset.pIdx]){d.ports[+t.dataset.pIdx].ip=t.value;triggerSave();}}
+  else if(t.dataset.pVlan){ const d=dev(t.dataset.pVlan); if(d&&d.ports[+t.dataset.pIdx]){d.ports[+t.dataset.pIdx].vlan=t.value;triggerSave();}}
+  else if(t.dataset.cableLbl){ const l=state.links.find(x=>x.id===t.dataset.cableLbl); if(l){l.label=t.value;triggerSave();}}
+});
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.section){
+    document.querySelectorAll(".sidebar-nav button[data-section]").forEach(btn=>btn.classList.remove("active"));
+    b.classList.add("active");
+    document.querySelectorAll(".form-section").forEach(sec=>sec.classList.remove("active"));
+    const targetSection=$("#section-"+b.dataset.section);
+    if(targetSection) targetSection.classList.add("active");
+
+    if(b.dataset.section==="catalog") renderCatalogTable();
+    if(b.dataset.section==="devices") renderFormDevices();
+    if(b.dataset.section==="vlan") renderFormVlans();
+    if(b.dataset.section==="cables") renderFormCables();
+  }
+  else if(b.id==="btn-form-add-custom"){ openDeviceModal(); }
+  else if(b.id==="btn-form-add-vlan"){ openVlanModal(); }
+  else if(b.id==="btn-form-add-link"){
+    if(state.devices.length<2){alert("Au moins 2 équipements requis.");return;}
+    openWireModal(state.devices[0].id, state.devices[1].id);
+  }
+  else if(b.id==="btn-form-history"){ openHistoryModal(); }
+  else if(b.id==="btn-form-reports"){ openReportsModal(); }
+  else if(b.id==="btn-form-clear"){ if(confirm("Vider l'architecture ?")){state={devices:[],links:[],vlans:[],glpiSeen:state.glpiSeen||[]};renderFormView();triggerSave();}}
+  else if(b.id==="btn-form-seed"){ if(confirm("Charger l'architecture démo ?")){loadExampleSeed();renderFormView();triggerSave();toast("Architecture démo chargée.");}}
+  else if(b.id==="btn-form-launch") switchToDiagram();
+  else if(b.dataset.editDev){ openDeviceModal(b.dataset.editDev); }
+  else if(b.dataset.editVlan){ openVlanModal(b.dataset.editVlan); }
+  else if(b.dataset.delVlan){
+    if(confirm("Supprimer ce VLAN ?")){
+      state.vlans=state.vlans.filter(v=>v.id!==b.dataset.delVlan);
+      renderFormView();triggerSave();
+    }
+  }
+  else if(b.dataset.addPort){ const d=dev(b.dataset.addPort); if(d){d.ports.push({name:"Port "+(d.ports.length+1),ip:"",vlan:""});renderFormDevices();renderFormCables();triggerSave();}}
+  else if(b.dataset.delPort){
+    const d=dev(b.dataset.delPort);
+    if(d){
+      const p=d.ports[+b.dataset.pIdx];
+      if(p&&portIsUsed(d,p.name)&&!confirm("Ce port est câblé. Supprimer le port et ses liaisons ?")) return;
+      if(p) state.links=state.links.filter(l=>!((l.a.d===d.id&&l.a.p===p.name)||(l.b.d===d.id&&l.b.p===p.name)));
+      d.ports.splice(+b.dataset.pIdx,1);
+      renderFormDevices();renderFormCables();triggerSave();
+    }
+  }
+  else if(b.dataset.delDev){
+    if(confirm("Supprimer cet équipement et ses liaisons ?")){
+      state.devices=state.devices.filter(d=>d.id!==b.dataset.delDev);
+      state.links=state.links.filter(l=>l.a.d!==b.dataset.delDev&&l.b.d!==b.dataset.delDev);
+      renderFormView();triggerSave();
+    }
+  }
+  else if(b.dataset.delLink){ state.links=state.links.filter(l=>l.id!==b.dataset.delLink);renderFormView();triggerSave();}
+});
+
+function loadExampleSeed(){
+  const D=(id,catId,name,ip,ports,status="online",modele="")=>{
+    const item=NETWORK_CATALOG.find(c=>c.id===catId)||{};
+    return {id,name,ip,status,
+      categorie:item.categorie||"Réseau",sousCategorie:item.sousCategorie||"",
+      fabricant:item.fabricant||"",modele:modele||item.sousCategorie||"",fonction:item.fonction||"",
+      coucheOSI:item.coucheOSI||"L3",environnement:item.environnement||"",
+      caracteristiques:item.caracteristiques||"",typeSchema:item.typeSchema||"switch_acces",
+      x:0,y:0,ports};
+  };
+  const P=(n,ip,vlan)=>({name:n,ip:ip||"",vlan:vlan||""});
+  const L=(a,pa,b,pb,ct,lbl)=>({id:uid(),a:{d:a,p:pa},b:{d:b,p:pb},cableType:ct,label:lbl});
+  state.devices=[
+    D("pep1","CAT-009","Peplink Balance 380 #1 (Orange)","10.255.1.1",[P("WAN1","IP Publique"),P("LAN1","10.255.1.1/30")],"online","Balance 380"),
+    D("pep2","CAT-009","Peplink Balance 380 #2 (SFR)","10.255.2.1",[P("WAN1","IP Publique"),P("LAN1","10.255.2.1/30")],"online","Balance 380"),
+    D("pep3","CAT-009","Peplink Balance 210 #3 (5G)","10.255.3.1",[P("WAN1","4G/5G"),P("LAN1","10.255.3.1/30")],"online","Balance 210"),
+    D("fgt","CAT-046","FortiGate 100F Cluster","10.10.0.1",[P("wan1","10.255.1.2/30"),P("wan2","10.255.2.2/30"),P("wan3","10.255.3.2/30"),P("port1","10.10.0.1/24","10")],"online","FortiGate 100F"),
+    D("core","CAT-020","Cisco Catalyst 9500 Cœur L3","10.10.0.2",[P("TenGi1/0/1","",10),P("TenGi1/0/2"),P("TenGi1/0/3"),P("TenGi1/0/4")],"online","Catalyst 9500"),
+    D("sw1","CAT-017","Cisco 9200 (Étage 1)","10.10.0.11",[P("Gi0/1",""),P("Gi0/2"),P("Gi0/3")],"online","Catalyst 9200"),
+    D("sw2","CAT-017","Cisco 9200 (Étage 2)","10.10.0.12",[P("Gi0/1",""),P("Gi0/2")],"maintenance","Catalyst 9200"),
+    D("sw3","CAT-021","Cisco Nexus 9000 (Serveurs)","10.10.0.13",[P("Eth1/1"),P("Eth1/2"),P("Eth1/3"),P("Eth1/4")],"online","Nexus 9000"),
+    D("srv1","CAT-103","Active Directory","10.10.10.10",[P("eth0","10.10.10.10/24","10")],"online","Windows Server"),
+    D("srv2","CAT-100","Serveur ERP","10.10.10.20",[P("eth0","10.10.10.20/24","10")],"online","ProLiant"),
+    D("srv3","CAT-104","NAS / Sauvegardes","10.10.20.10",[P("LAN 1 (10G)","10.10.20.10/24","20")],"offline","NAS 10G")
+  ];
+  state.links=[
+    L("pep1","LAN1","fgt","wan1","copper-cat6","Orange /30"),
+    L("pep2","LAN1","fgt","wan2","copper-cat6","SFR /30"),
+    L("pep3","LAN1","fgt","wan3","copper-cat6","5G /30"),
+    L("fgt","port1","core","TenGi1/0/1","fiber-10g","10G Trunk"),
+    L("core","TenGi1/0/2","sw1","Gi0/1","fiber-10g","Étage 1"),
+    L("core","TenGi1/0/3","sw2","Gi0/1","fiber-10g","Étage 2"),
+    L("core","TenGi1/0/4","sw3","Eth1/1","fiber-10g","Serveurs"),
+    L("sw3","Eth1/2","srv1","eth0","copper-cat6","VLAN 10 AD"),
+    L("sw3","Eth1/3","srv2","eth0","copper-cat6","VLAN 10 ERP"),
+    L("sw3","Eth1/4","srv3","LAN 1 (10G)","fiber-10g","10G NAS")
+  ];
+  state.vlans=[
+    {id:"v1",vid:1,name:"LAN cœur",subnet:"10.10.0.0/24",gateway:"10.10.0.1",description:"Management / cœur L3"},
+    {id:"v10",vid:10,name:"Data",subnet:"10.10.10.0/24",gateway:"10.10.10.1",description:"AD, DNS, ERP"},
+    {id:"v20",vid:20,name:"Backup",subnet:"10.10.20.0/24",gateway:"10.10.20.1",description:"NAS / sauvegardes"}
+  ];
+}
+
+function ensureLayout(){
+  const has=d=>Number.isFinite(d.x)&&Number.isFinite(d.y);
+  if(!state.devices.some(d=>!has(d))) return false;
+  const keep=new Map(state.devices.filter(has).map(d=>[d.id,{x:d.x,y:d.y}]));
+  autoLayout();
+  state.devices.forEach(d=>{const k=keep.get(d.id);if(k){d.x=k.x;d.y=k.y;}});
+  return true;
+}
+function switchToDiagram(){
+  $("#view-form").classList.remove("active");
+  $("#view-diagram").classList.add("active");
+  $("#btn-view-form").classList.remove("active");
+  $("#btn-view-diagram").classList.add("active");
+  if(ensureLayout())triggerSave();
+  renderPanel();fit();
+}
+function switchToForm(){
+  $("#view-diagram").classList.remove("active");
+  $("#view-form").classList.add("active");
+  $("#btn-view-diagram").classList.remove("active");
+  $("#btn-view-form").classList.add("active");
+  renderFormView();
+}
+
+$("#btn-view-form").onclick=switchToForm;
+$("#btn-view-diagram").onclick=switchToDiagram;
+$("#btn-generate-diagram").onclick=switchToDiagram;
+$("#b-back-form").onclick=switchToForm;
+
+// ============================================================================
+// GÉOMÉTRIE & LAYOUT
+// ============================================================================
+function W(d){ let u=0,dn=0; state.links.forEach(l=>{ [[l.a,l.b],[l.b,l.a]].forEach(([s,o])=>{ if(s.d!==d.id) return; const od=dev(o.d); if(!od) return; const dl=layer(od)-layer(d); if(dl>0) dn++; else if(dl<0) u++; }); }); return Math.max(204,Math.max(u,dn)*96+26); }
+function neighbors(d){ const r=[]; state.links.forEach(l=>{ if(l.a.d===d.id){const o=dev(l.b.d);if(o)r.push(o);} else if(l.b.d===d.id){const o=dev(l.a.d);if(o)r.push(o);}}); return r; }
+
+function autoLayout(){
+  const byLayer={};
+  state.devices.forEach(d=>{(byLayer[layer(d)]=byLayer[layer(d)]||[]).push(d);});
+  const keys=Object.keys(byLayer).map(Number).sort((a,b)=>a-b);
+  const placed=new Set();
+  keys.forEach((k,row)=>{
+    const arr=byLayer[k],bc=new Map();
+    arr.forEach(d=>{const nb=neighbors(d).filter(n=>placed.has(n.id));bc.set(d.id,nb.length?nb.reduce((s,n)=>s+n.x,0)/nb.length:null);});
+    arr.sort((a,b)=>{const x=bc.get(a.id),y=bc.get(b.id);return((x==null?1e9:x)-(y==null?1e9:y))||nat(a.name,b.name);});
+    let prev=null;const wants=[];
+    arr.forEach(d=>{const w=W(d),packed=prev?prev.x+W(prev)/2+GAPX+w/2:0,want=bc.get(d.id)!=null?bc.get(d.id):packed;d.x=prev?Math.max(want,packed):want;d.y=row*GAPY;wants.push(want);prev=d;});
+    const mw=wants.reduce((s,v)=>s+v,0)/wants.length,mx=arr.reduce((s,d)=>s+d.x,0)/arr.length;
+    arr.forEach(d=>{d.x+=mw-mx;});arr.forEach(d=>placed.add(d.id));
+  });
+}
+
+function computeAnchors(){
+  const per={},A={};
+  state.links.forEach(l=>{["a","b"].forEach(e=>{const s=l[e],o=l[e==="a"?"b":"a"],d=dev(s.d),od=dev(o.d);if(!d||!od)return;const dy=od.y-d.y;let side;if(Math.abs(dy)<H+10)side=od.x>=d.x?"right":"left";else side=dy>0?"down":"up";const o2=per[d.id]=per[d.id]||{up:[],down:[],left:[],right:[]};o2[side].push({l,e,ox:od.x,oy:od.y});});});
+  Object.keys(per).forEach(id=>{const d=dev(id),w=W(d);["up","down","left","right"].forEach(side=>{const arr=per[id][side];const vert=side==="up"||side==="down";arr.sort((p,q)=>vert?p.ox-q.ox:p.oy-q.oy);arr.forEach((it,i)=>{const n=arr.length,f=(i+.5)/n;let x,y;if(vert){x=d.x-w/2+w*f;y=d.y+(side==="down"?H/2:-H/2);}else{y=d.y-H/2+H*f;x=d.x+(side==="right"?w/2:-w/2);}A[it.l.id+it.e]={x,y,side};});});});
+  return A;
+}
+
+// ============================================================================
+// RENDU SVG
+// ============================================================================
+function portOf(ref){const d=dev(ref.d);if(!d||!d.ports)return null;return d.ports.find(p=>p.name===ref.p)||null;}
+function trunc(s,n){s=String(s);return s.length>n?s.slice(0,n-1)+"…":s;}
+
+function diagramMarkup(P){
+  const A=computeAnchors();let links="",labels="",nodes="";
+  state.links.forEach((l,idx)=>{
+    const a=A[l.id+"a"],b=A[l.id+"b"];if(!a||!b)return;
+    const horiz=(a.side==="left"||a.side==="right");let dpath,mx,my;
+    if(horiz){const xm=(a.x+b.x)/2;dpath=`M${a.x} ${a.y} C${xm} ${a.y} ${xm} ${b.y} ${b.x} ${b.y}`;mx=xm;my=(a.y+b.y)/2;}
+    else{const ym=(a.y+b.y)/2;dpath=`M${a.x} ${a.y} C${a.x} ${ym} ${b.x} ${ym} ${b.x} ${b.y}`;mx=(a.x+b.x)/2;my=ym;}
+    const ci=CABLE_TYPES[l.cableType]||CABLE_TYPES["copper-cat6"],sc=ci.color;
+    const on=sel&&sel.kind==="link"&&sel.id===l.id;
+    links+=`<g><path d="${dpath}" fill="none" stroke="transparent" stroke-width="16" pointer-events="stroke" data-link="${l.id}" style="cursor:pointer"/><path d="${dpath}" fill="none" stroke="${on?P.sel:sc}" stroke-width="${on?3.6:2.2}" stroke-linecap="round" pointer-events="none"/>`;
+    links+=`<circle cx="${a.x}" cy="${a.y}" r="3.2" fill="${on?P.sel:sc}" pointer-events="none"/><circle cx="${b.x}" cy="${b.y}" r="3.2" fill="${on?P.sel:sc}" pointer-events="none"/></g>`;
+    if(showLabels){
+      const halo=`paint-order="stroke" stroke="${P.halo}" stroke-width="3" stroke-linejoin="round"`;
+      [[l.a,a],[l.b,b]].forEach(([ref,an])=>{
+        const p=portOf(ref),name=ref.p+(p&&p.vlan?" · V"+p.vlan:""),ip=p&&p.ip?p.ip:"";
+        let tx=an.x,anchor="middle",y1,y2;
+        if(an.side==="down"){y1=an.y+14;y2=an.y+26;}else if(an.side==="up"){y1=an.y-26;y2=an.y-14;}
+        else{anchor=an.side==="right"?"start":"end";tx=an.x+(an.side==="right"?8:-8);y1=an.y-2;y2=an.y+10;}
+        labels+=`<text x="${tx}" y="${y1}" text-anchor="${anchor}" font-family="${FONT}" font-size="10.5" font-weight="600" fill="${P.ink}" ${halo}>${esc(name)}</text>`;
+        if(ip)labels+=`<text x="${tx}" y="${y2}" text-anchor="${anchor}" font-family="${MONO}" font-size="9.5" fill="${P.muted}" ${halo}>${esc(ip)}</text>`;
+      });
+      if(l.label){
+        const yOff=(idx%3-1)*16;
+        const tw=l.label.length*6.2+16;
+        labels+=`<rect x="${mx-tw/2}" y="${my-10+yOff}" width="${tw}" height="20" rx="10" fill="${P.card}" stroke="${sc}" stroke-width="1.2"/><text x="${mx}" y="${my+3.8+yOff}" text-anchor="middle" font-family="${FONT}" font-size="10" font-weight="500" fill="${P.ink}">${esc(l.label)}</text>`;
+      }
+    }
+  });
+  state.devices.forEach(d=>{nodes+=hardware(d,P,sel&&sel.kind==="dev"&&sel.id===d.id);});
+  return links+nodes+labels;
+}
+
+function hardware(d,P,on){
+  const w=W(d),x=d.x-w/2,y=d.y-H/2,t=d.typeSchema||"switch_acces",status=d.status||"online";
+  const accColor=COLOR_MAP[t]||"#2f8470";
+  let bg="#3a4654",fg="#eef1f4",mu="#b4bdc7";
+  if(t.includes("routeur")||t.includes("passerelle")||t.includes("modem")){bg="#2a2f36";}
+  else if(t.includes("pare_feu")||t.includes("waf")||t.includes("load_balancer")){bg="#d6dadf";fg="#1d2630";mu="#4d5864";}
+  else if(t.includes("core")||t.includes("distribution")){bg="#1f3b57";fg="#eef3f8";mu="#a9bdd1";}
+  else if(t.includes("serveur")||t.includes("hote")){bg="#1a1c21";}
+  else if(t.includes("stockage")){bg="#261a33";fg="#f3e8ff";mu="#c084fc";}
+  else if(t.includes("wifi")){bg="#162836";fg="#e0f2fe";mu="#7dd3fc";}
+  if(status==="offline") bg="#181a1d";
+
+  const used=state.links.filter(l=>l.a.d===d.id||l.b.d===d.id).length;
+  const max=Math.floor((w-55)/7.3);
+  const slot=bg==="#d6dadf"?"#8e969f":"#0c0f13";
+  let ledC=status==="offline"?"#6b7280":status==="maintenance"?"#f59e0b":"#3fb950";
+  let strokeC=wireFrom===d.id?"#1f5f8b":on?P.sel:status==="offline"?"#ef4444":status==="maintenance"?"#f59e0b":"rgba(0,0,0,.4)";
+  let strokeW=wireFrom===d.id||on?3:status!=="online"?1.8:1;
+
+  let s=`<g data-node="${d.id}" style="cursor:pointer">`;
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${H}" rx="6" fill="${bg}" stroke="${strokeC}" stroke-width="${strokeW}"/>`;
+  s+=`<rect x="${x+1}" y="${y+1}" width="8" height="${H-2}" rx="4" fill="rgba(0,0,0,.2)"/><rect x="${x+w-9}" y="${y+1}" width="8" height="${H-2}" rx="4" fill="rgba(0,0,0,.2)"/>`;
+  [[x+5,y+10],[x+5,y+H-10],[x+w-5,y+10],[x+w-5,y+H-10]].forEach(c=>{s+=`<circle cx="${c[0]}" cy="${c[1]}" r="1.8" fill="rgba(0,0,0,.5)"/>`;});
+  s+=`<rect x="${x+12}" y="${y+2}" width="${w-24}" height="3" rx="1.5" fill="${accColor}"/>`;
+  s+=`<text x="${x+17}" y="${y+16}" font-family="${FONT}" font-size="9.5" fill="${mu}">${esc([d.fabricant,d.modele||d.sousCategorie].filter(Boolean).join(" · ")||d.categorie||"Réseau")}</text>`;
+  s+=`<text x="${x+17}" y="${y+31}" font-family="${FONT}" font-size="12.5" font-weight="600" fill="${fg}">${esc(trunc(d.name,max))}</text>`;
+  s+=`<text x="${x+17}" y="${y+44}" font-family="${MONO}" font-size="10" fill="${mu}">IP: ${esc(d.ip||"")}</text>`;
+
+  // Afficher les VLAN configurés sur l'équipement
+  const vlanSet=new Set();
+  (d.ports||[]).forEach(p=>{if(p.vlan)vlanSet.add(p.vlan);});
+  if(vlanSet.size>0 && showLabels){
+    const vlanStr=Array.from(vlanSet).sort((a,b)=>Number(a)-Number(b)).slice(0,3).map(v=>"V"+v).join(", ");
+    s+=`<text x="${x+17}" y="${y+55}" font-family="${FONT}" font-size="8.5" fill="${P.muted}">${esc(vlanStr+(vlanSet.size>3?"…":""))}</text>`;
+  }
+
+  // Badge statut sur le châssis
+  if(status==="offline"){
+    s+=`<rect x="${x+w-74}" y="${y+7}" width="64" height="15" rx="3" fill="#ef4444"/><circle cx="${x+w-67}" cy="${y+14.5}" r="3" fill="#fff"/><text x="${x+w-40}" y="${y+18}" font-family="${FONT}" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle">HORS LIGNE</text>`;
+  } else if(status==="maintenance"){
+    s+=`<rect x="${x+w-80}" y="${y+7}" width="70" height="15" rx="3" fill="#f59e0b"/><circle cx="${x+w-73}" cy="${y+14.5}" r="3" fill="#fff"/><text x="${x+w-43}" y="${y+18}" font-family="${FONT}" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle">MAINTENANCE</text>`;
+  } else {
+    s+=`<rect x="${x+w-60}" y="${y+7}" width="50" height="15" rx="3" fill="#10b981"/><circle cx="${x+w-53}" cy="${y+14.5}" r="3" fill="#fff"/><text x="${x+w-33}" y="${y+18}" font-family="${FONT}" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle">EN LIGNE</text>`;
+  }
+
+  // LEDs ports
+  const row=(n,y0,step)=>{let r="";for(let i=0;i<n;i++)r+=`<rect x="${x+17+i*step}" y="${y0}" width="${step-3}" height="7" rx="1.2" fill="${i<used?ledC:slot}"/>`;return r;};
+  if(t.includes("serveur")||t.includes("stockage")||t.includes("hote")){const bw=(w-34-5*4)/6;for(let i=0;i<6;i++){const bx=x+17+i*(bw+4);s+=`<rect x="${bx}" y="${y+H-20}" width="${bw}" height="12" rx="1.5" fill="#2b2f36" stroke="#4a525d"/><circle cx="${bx+bw-4}" cy="${y+H-14}" r="1.5" fill="${i<used?ledC:"#555d68"}"/>`;}}
+  else if(t.includes("core")||t.includes("distribution")){const n=Math.max(4,Math.floor((w-44)/10));s+=row(n,y+H-20,10)+row(n,y+H-11,10);}
+  else if(t.includes("routeur")||t.includes("wifi")){const n=Math.max(4,Math.floor((w-90)/10));s+=row(n,y+H-14,10);}
+  else if(t.includes("pare_feu")||t.includes("load_balancer")){const n=Math.max(4,Math.floor((w-44)/11));s+=row(n,y+H-14,11);}
+  else{const n=Math.max(4,Math.floor((w-44)/10));s+=row(n,y+H-14,10);}
+  return s+"</g>";
+}
+
+function pal(){const t=document.documentElement.dataset.theme;const dark=t?t==="dark":(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);return dark?PAL.dark:PAL.light;}
+
+function renderCanvas(){
+  const P=pal();
+  svg.innerHTML=`<defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse" patternTransform="translate(${view.x} ${view.y}) scale(${view.k})"><circle cx="1" cy="1" r="1" fill="${P.grid}"/></pattern></defs>`+
+    `<rect width="100%" height="100%" fill="url(#grid)" data-bg="1"/>`+
+    `<g transform="translate(${view.x} ${view.y}) scale(${view.k})">${diagramMarkup(P)}</g>`;
+}
+
+function bbox(){
+  if(!state.devices.length)return{x0:-100,y0:-60,x1:100,y1:60};
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  state.devices.forEach(d=>{const w=W(d);x0=Math.min(x0,d.x-w/2);x1=Math.max(x1,d.x+w/2);y0=Math.min(y0,d.y-H/2);y1=Math.max(y1,d.y+H/2);});
+  return{x0,y0,x1,y1};
+}
+
+function fit(){
+  const r=svg.getBoundingClientRect(),b=bbox();
+  const pad=60,bw=b.x1-b.x0+pad*2,bh=b.y1-b.y0+pad*2+40;
+  const k=Math.min(r.width/bw,r.height/bh,1.3)||1;
+  view.k=k;view.x=r.width/2-((b.x0+b.x1)/2)*k;view.y=r.height/2-((b.y0+b.y1)/2)*k;
+  renderCanvas();
+}
+
+function toWorld(e){const r=svg.getBoundingClientRect();return{x:((e.clientX-r.left)-view.x)/view.k,y:((e.clientY-r.top)-view.y)/view.k};}
+function zoomAt(cx,cy,f){const k=Math.min(3,Math.max(.15,view.k*f)),r=k/view.k;view.x=cx-(cx-view.x)*r;view.y=cy-(cy-view.y)*r;view.k=k;renderCanvas();}
+
+// ============================================================================
+// INSPECTION MODALE
+// ============================================================================
+function openInspect(dId){
+  const d=dev(dId);if(!d)return;
+  inspectedId=dId;
+  const m=$("#modal-inspect");if(!m)return;
+  m.style.display="flex";
+  $("#insp-name").textContent=d.name;
+  $("#insp-sub").textContent=`${[d.fabricant,d.modele||d.sousCategorie].filter(Boolean).join(" · ")||"-"}`;
+  const av=$("#insp-avatar");if(av){av.textContent=(d.fabricant||"EQ").slice(0,2).toUpperCase();av.style.background=COLOR_MAP[d.typeSchema]||"#2f8470";}
+  updateInspectStatus(d.status||"online");
+
+  // Ports
+  const tbody=$("#insp-ports-tbody");tbody.innerHTML="";
+  let activeCount=0;
+  (d.ports||[]).forEach(p=>{
+    const lnk=state.links.find(l=>(l.a.d===d.id&&l.a.p===p.name)||(l.b.d===d.id&&l.b.p===p.name));
+    const connected=!!lnk;if(connected)activeCount++;
+    let peer=`<span style="color:var(--muted)">— Libre</span>`,cbl=`<span style="color:var(--muted)">—</span>`;
+    if(lnk){
+      const isA=(lnk.a.d===d.id&&lnk.a.p===p.name);
+      const peerD=dev(isA?lnk.b.d:lnk.a.d);const peerP=isA?lnk.b.p:lnk.a.p;
+      const cd=CABLE_TYPES[lnk.cableType]||CABLE_TYPES["copper-cat6"];
+      peer=`<strong>${esc(peerD?peerD.name:"?")}</strong> <span style="font-family:var(--mono);color:var(--accent)">· ${esc(peerP)}</span>`;
+      cbl=`<span style="color:${cd.color};font-weight:600">●</span> ${esc(cd.label)}`;
+    }
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><strong>${esc(p.name)}</strong></td><td>${connected?`<span class="badge-port-on">🟢 ACTIF</span>`:`<span class="badge-port-off">⚪ LIBRE</span>`}</td><td><span style="font-family:var(--mono)">${esc(p.ip||d.ip||"—")}</span></td><td>${p.vlan?`<span class="badge-osi">V${esc(p.vlan)}</span>`:"—"}</td><td>${peer}</td><td>${cbl}</td>`;
+    tbody.appendChild(tr);
+  });
+  $("#insp-ports-summary").textContent=`${activeCount}/${(d.ports||[]).length} port(s) connecté(s)`;
+
+  // Fiche technique
+  $("#sp-cat").textContent=d.categorie||"—";
+  $("#sp-fab").textContent=d.fabricant||"—";
+  $("#sp-osi").textContent=d.coucheOSI||"L3";
+  $("#sp-type").textContent=d.typeSchema||"—";
+  $("#sp-env").textContent=d.environnement||"—";
+  $("#sp-souscat").textContent=d.sousCategorie||"—";
+  $("#sp-fonction").textContent=d.fonction||"—";
+}
+
+function updateInspectStatus(status){
+  const badge=$("#insp-status-badge");
+  if(badge){
+    if(status==="offline"){badge.className="bs-off";badge.textContent="🔴 HORS LIGNE";}
+    else if(status==="maintenance"){badge.className="bs-maint";badge.textContent="🟠 MAINTENANCE";}
+    else{badge.className="bs-on";badge.textContent="🟢 EN LIGNE";}
+  }
+  document.querySelectorAll(".status-btn").forEach(b=>b.classList.toggle("active",b.dataset.setStatus===status));
+}
+
+function closeInspect(){const m=$("#modal-inspect");if(m)m.style.display="none";inspectedId=null;}
+
+$("#btn-close-inspect").onclick=closeInspect;
+$("#btn-insp-ok").onclick=closeInspect;
+document.querySelectorAll(".status-btn").forEach(btn=>{
+  btn.onclick=()=>{
+    if(!inspectedId)return;
+    const d=dev(inspectedId);if(!d)return;
+    d.status=btn.dataset.setStatus;
+    updateInspectStatus(d.status);
+    renderCanvas();renderPanel();triggerSave();
+    toast(`Statut de ${d.name} : ${d.status}`);
+  };
+});
+$("#btn-insp-panel").onclick=()=>{if(inspectedId){select({kind:"dev",id:inspectedId});closeInspect();}};
+$("#btn-insp-del").onclick=()=>{
+  if(!inspectedId)return;
+  const d=dev(inspectedId);
+  if(confirm(`Supprimer "${d.name}" et ses liaisons ?`)){
+    state.devices=state.devices.filter(x=>x.id!==d.id);
+    state.links=state.links.filter(l=>l.a.d!==d.id&&l.b.d!==d.id);
+    sel=null;closeInspect();renderCanvas();renderPanel();triggerSave();
+  }
+};
+
+// ============================================================================
+// MODALE VLAN (ajouter / modifier)
+// ============================================================================
+function openVlanModal(id){
+  const m=$("#modal-vlan"); if(!m) return;
+  if(id){
+    const v=state.vlans.find(x=>x.id===id); if(!v) return;
+    $("#vlan-modal-title").textContent="Modifier le VLAN";
+    $("#vf-id").value=v.id;
+    $("#vf-vid").value=v.vid;
+    $("#vf-name").value=v.name;
+    $("#vf-subnet").value=v.subnet;
+    $("#vf-gateway").value=v.gateway||"";
+    $("#vf-desc").value=v.description||"";
+  } else {
+    $("#vlan-modal-title").textContent="Ajouter un VLAN";
+    $("#vf-id").value="";
+    $("#vf-vid").value="";
+    $("#vf-name").value="";
+    $("#vf-subnet").value="";
+    $("#vf-gateway").value="";
+    $("#vf-desc").value="";
+  }
+  m.style.display="flex";
+  setTimeout(()=>$("#vf-vid").focus(),50);
+}
+function closeVlanModal(){ const m=$("#modal-vlan"); if(m) m.style.display="none"; }
+$("#btn-close-vlan").onclick=closeVlanModal;
+$("#btn-cancel-vlan").onclick=closeVlanModal;
+$("#btn-submit-vlan").onclick=()=>{
+  const vid=$("#vf-vid").value.trim();
+  const name=$("#vf-name").value.trim();
+  const subnet=$("#vf-subnet").value.trim();
+  if(!vid||!name||!subnet){ alert("ID VLAN, Nom et Sous-réseau sont obligatoires."); return; }
+  const gateway=$("#vf-gateway").value.trim();
+  const description=$("#vf-desc").value.trim();
+  const id=$("#vf-id").value;
+  const vnum=Number(vid);
+  if(!Number.isInteger(vnum)||vnum<1||vnum>4094){ alert("L'ID VLAN doit être un entier entre 1 et 4094."); return; }
+  const net=parseCidr(subnet);
+  if(!net){ alert("Sous-réseau invalide. Format attendu : 10.0.10.0/24"); return; }
+  if(gateway){
+    if(!isIPv4(gateway)||ip2int(gateway)<net.start||ip2int(gateway)>net.end){ alert("La passerelle doit être une adresse IPv4 comprise dans le sous-réseau."); return; }
+  }
+  const others=state.vlans.filter(x=>x.id!==id);
+  if(others.some(x=>Number(x.vid)===vnum)){ alert("Le VLAN "+vnum+" existe déjà."); return; }
+  const ov=others.find(x=>{const n=parseCidr(x.subnet);return n&&n.start<=net.end&&net.start<=n.end;});
+  if(ov&&!confirm("Ce sous-réseau chevauche celui du VLAN "+ov.vid+" ("+ov.subnet+"). Enregistrer quand même ?")) return;
+  if(id){
+    const v=state.vlans.find(x=>x.id===id); if(!v) return;
+    v.vid=Number(vid); v.name=name; v.subnet=subnet; v.gateway=gateway; v.description=description;
+  } else {
+    state.vlans.push({id:uid(), vid:Number(vid), name, subnet, gateway, description});
+  }
+  closeVlanModal();
+  renderFormView(); triggerSave();
+  toast(id?"VLAN modifié.":"VLAN ajouté.");
+};
+
+// ============================================================================
+// MODALE HISTORIQUE
+// ============================================================================
+function openHistoryModal(){
+  const m=$("#modal-history"); if(!m) return;
+  m.style.display="flex";
+  loadHistory();
+}
+function closeHistoryModal(){ const m=$("#modal-history"); if(m) m.style.display="none"; }
+$("#btn-close-history").onclick=closeHistoryModal;
+$("#btn-history-close").onclick=closeHistoryModal;
+$("#btn-history-refresh").onclick=loadHistory;
+$("#history-tbody").addEventListener("click",e=>{
+  const b=e.target.closest("[data-restore-id]");
+  if(b&&confirm("Restaurer cette version ? L'état actuel sera écrasé.")){
+    restoreVersion(b.dataset.restoreId);
+  }
+});
+
+async function loadHistory(){
+  const tbody=$("#history-tbody"); tbody.innerHTML="";
+  const loading=$("#history-loading"); loading.style.display="block";
+  const empty=$("#history-empty"); empty.style.display="none";
+
+  if(serverAvailable){
+    try{
+      const r=await fetch(`${API}/history`,{signal:AbortSignal.timeout(3000)});
+      if(r.ok){
+        const data=await r.json();
+        loading.style.display="none";
+        if(!data||!data.length){
+          empty.style.display="block";
+          return;
+        }
+        data.forEach(h=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML=`
+            <td style="padding:8px 10px;border-bottom:1px solid var(--line)">${h.id}</td>
+            <td style="padding:8px 10px;border-bottom:1px solid var(--line)">${esc(h.saved_at)}</td>
+            <td style="padding:8px 10px;border-bottom:1px solid var(--line)">${Math.round(h.taille/1024)} KB</td>
+            <td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right">
+              <button class="btn" style="padding:2px 8px;font-size:11px" data-restore-id="${h.id}">Restaurer</button>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+        return;
+      }
+    }catch(e){}
+  }
+  loading.style.display="none";
+  empty.style.display="block";
+  empty.textContent="Historique non disponible (serveur requis)";
+}
+
+async function restoreVersion(id){
+  if(!serverAvailable){ toast("Serveur requis pour la restauration."); return; }
+  try{
+    const r=await fetch(`${API}/history/${id}`,{signal:AbortSignal.timeout(3000)});
+    if(r.ok){
+      const data=await r.json();
+      if(data.ok&&data.schema){
+        state.devices=data.schema.devices.map(d=>({...d,status:d.status||"online"}));
+        state.links=data.schema.links||[];
+        state.vlans=data.schema.vlans||[];
+        closeHistoryModal();
+        renderFormView(); autoLayout(); renderPanel(); renderCanvas(); triggerSave();
+        toast("Version restaurée avec succès.");
+      }
+    }
+  }catch(e){ toast("Erreur lors de la restauration."); }
+}
+
+// ============================================================================
+// MODALE RAPPORTS
+// ============================================================================
+function openReportsModal(){
+  const m=$("#modal-reports"); if(!m) return;
+  m.style.display="flex";
+}
+function closeReportsModal(){ const m=$("#modal-reports"); if(m) m.style.display="none"; }
+$("#btn-close-reports").onclick=closeReportsModal;
+$("#btn-reports-close").onclick=closeReportsModal;
+
+$("#btn-report-devices").onclick=()=>generateReport("devices");
+$("#btn-report-ports").onclick=()=>generateReport("ports");
+$("#btn-report-vlan").onclick=()=>generateReport("vlan");
+$("#btn-report-full").onclick=()=>generateReport("full");
+
+function generateReport(type){
+  let csv="", filename="rapport";
+  if(type==="devices"){
+    filename="equipements";
+    csv="Nom;Fabricant;Modèle;IP;Statut;Type;Catégorie\n";
+    state.devices.forEach(d=>{
+      csv+=[d.name,d.fabricant||"",d.modele||"",d.ip||"",d.status||"online",d.typeSchema||"",d.categorie||""].map(csvCell).join(";")+"\n";
+    });
+  }
+  else if(type==="ports"){
+    filename="ports";
+    csv="Équipement;Port;IP;VLAN;État\n";
+    state.devices.forEach(d=>{
+      (d.ports||[]).forEach(p=>{
+        const used=state.links.some(l=>(l.a.d===d.id&&l.a.p===p.name)||(l.b.d===d.id&&l.b.p===p.name));
+        csv+=[d.name,p.name,p.ip||"",p.vlan||"",used?"Connecté":"Libre"].map(csvCell).join(";")+"\n";
+      });
+    });
+  }
+  else if(type==="vlan"){
+    filename="vlan";
+    csv="ID VLAN;Nom;Sous-réseau;Passerelle;Description\n";
+    state.vlans.forEach(v=>{
+      csv+=[v.vid,v.name,v.subnet,v.gateway||"",v.description||""].map(csvCell).join(";")+"\n";
+    });
+  }
+  else if(type==="full"){
+    filename="rapport_complet";
+    csv="=== ÉQUIPEMENTS ===\nNom;Fabricant;Modèle;IP;Statut\n";
+    state.devices.forEach(d=>{
+      csv+=[d.name,d.fabricant||"",d.modele||"",d.ip||"",d.status||"online"].map(csvCell).join(";")+"\n";
+    });
+    csv+="\n=== VLAN ===\nID VLAN;Nom;Sous-réseau;Passerelle\n";
+    state.vlans.forEach(v=>{
+      csv+=[v.vid,v.name,v.subnet,v.gateway||""].map(csvCell).join(";")+"\n";
+    });
+    csv+="\n=== CONNEXIONS ===\nSource;Port;Destination;Port;Type\n";
+    state.links.forEach(l=>{
+      const da=dev(l.a.d), db=dev(l.b.d);
+      csv+=[da?da.name:"?",l.a.p,db?db.name:"?",l.b.p,l.cableType||""].map(csvCell).join(";")+"\n";
+    });
+  }
+  downloadBlob(filename+".csv",new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));
+  closeReportsModal();
+  toast("Rapport généré.");
+}
+
+// ============================================================================
+// MODALE ÉQUIPEMENT (ajouter / modifier)
+// ============================================================================
+function openDeviceModal(id){
+  const m=$("#modal-device"); if(!m) return;
+  $("#df-type").innerHTML=typeOptionsHtml("switch_acces");
+  if(id){
+    const d=dev(id); if(!d) return;
+    if(d.typeSchema&&!TYPE_OPTIONS.some(t=>t[0]===d.typeSchema)){
+      const o=document.createElement("option");o.value=d.typeSchema;o.textContent=d.typeSchema.replace(/_/g," ")+" (type du catalogue)";$("#df-type").appendChild(o);
+    }
+    $("#dev-modal-title").textContent="Modifier l'équipement";
+    $("#df-id").value=d.id;
+    $("#df-name").value=d.name||"";
+    $("#df-fab").value=d.fabricant||"";
+    $("#df-modele").value=d.modele||"";
+    $("#df-ip").value=d.ip||"";
+    $("#df-nbports").value=(d.ports||[]).length||4;
+    $("#df-type").value=d.typeSchema||"switch_acces";
+  } else {
+    $("#dev-modal-title").textContent="Ajouter un équipement";
+    $("#df-id").value="";
+    $("#df-name").value="";
+    $("#df-fab").value="";
+    $("#df-modele").value="";
+    $("#df-ip").value=`10.0.${state.devices.length+1}.1/24`;
+    $("#df-nbports").value=4;
+    $("#df-type").value="switch_acces";
+  }
+  m.style.display="flex";
+  setTimeout(()=>$("#df-name").focus(),50);
+}
+function closeDeviceModal(){ const m=$("#modal-device"); if(m) m.style.display="none"; }
+$("#btn-close-device").onclick=closeDeviceModal;
+$("#btn-cancel-device").onclick=closeDeviceModal;
+$("#btn-submit-device").onclick=()=>{
+  const name=$("#df-name").value.trim();
+  const ip=$("#df-ip").value.trim();
+  if(!name||!ip){ alert("Le nom et l'adresse IP sont obligatoires."); return; }
+  const fab=$("#df-fab").value.trim();
+  const modele=$("#df-modele").value.trim();
+  const typeSchema=$("#df-type").value;
+  const nb=Math.max(1, Math.min(48, Number($("#df-nbports").value)||4));
+  const id=$("#df-id").value;
+  const typeLabel=(TYPE_OPTIONS.find(t=>t[0]===typeSchema)||[])[1]||typeSchema;
+  if(id){
+    const d=dev(id); if(!d) return;
+    d.name=name; d.ip=ip; d.fabricant=fab; d.modele=modele; d.typeSchema=typeSchema;
+    if(nb>d.ports.length) d.ports=numberedPorts(typeSchema, nb, d.ports);
+    else if(nb<d.ports.length) d.ports=shrinkPorts(d, nb);
+  } else {
+    state.devices.push({
+      id:uid(), name, ip, status:"online",
+      categorie:"Réseau", sousCategorie:modele||typeLabel,
+      fabricant:fab, modele, fonction:typeLabel, coucheOSI:"L2/L3",
+      environnement:"PME, Campus", caracteristiques:"", typeSchema,
+      ports:numberedPorts(typeSchema, nb)
+    });
+  }
+  closeDeviceModal();
+  renderFormView(); renderPanel(); renderCanvas(); triggerSave();
+  toast(id?"Équipement modifié.":"Équipement ajouté.");
+};
+
+// ============================================================================
+// MODE RELIER (deux clics + choix des ports)
+// ============================================================================
+function updateWireBanner(){
+  const t=$("#wire-banner-text"); if(!t) return;
+  if(!wireFrom) t.textContent="Mode relier : cliquez le premier équipement, puis le second.";
+  else { const d=dev(wireFrom); t.textContent="Premier : "+(d?d.name:"?")+" — cliquez maintenant le second équipement."; }
+}
+function setWireMode(on){
+  wireMode=!!on;
+  if(!on) wireFrom=null;
+  const btn=$("#b-wire"); if(btn) btn.classList.toggle("active-tool", wireMode);
+  const ban=$("#wire-banner"); if(ban) ban.classList.toggle("on", wireMode);
+  updateWireBanner();
+  renderCanvas();
+}
+function openWireModal(aId,bId){
+  if(aId===bId){ toast("Choisissez deux équipements différents."); wireFrom=aId; updateWireBanner(); return; }
+  const a=dev(aId), b=dev(bId); if(!a||!b) return;
+  wirePair={a:aId,b:bId};
+  $("#wire-lab-a").textContent="Port de "+a.name;
+  $("#wire-lab-b").textContent="Port de "+b.name;
+  const opts=d=>(d.ports||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}${portIsUsed(d,p.name)?" (occupé)":" (libre)"}</option>`).join("");
+  $("#wire-pa").innerHTML=opts(a)||`<option value="Port 1">Port 1</option>`;
+  $("#wire-pb").innerHTML=opts(b)||`<option value="Port 1">Port 1</option>`;
+  $("#wire-type").innerHTML=Object.keys(CABLE_TYPES).map(k=>`<option value="${k}">${CABLE_TYPES[k].label}</option>`).join("");
+  $("#wire-label").value="1 Gb/s";
+  $("#modal-wire").style.display="flex";
+}
+function closeWireModal(){ const m=$("#modal-wire"); if(m) m.style.display="none"; }
+$("#btn-close-wire").onclick=()=>{ closeWireModal(); setWireMode(false); };
+$("#btn-cancel-wire").onclick=()=>{ closeWireModal(); wireFrom=null; updateWireBanner(); renderCanvas(); };
+$("#btn-submit-wire").onclick=()=>{
+  if(!wirePair) return;
+  const a=dev(wirePair.a), b=dev(wirePair.b);
+  const pa=$("#wire-pa").value, pb=$("#wire-pb").value;
+  if(!a||!b||!pa||!pb){ toast("Choisissez les deux ports."); return; }
+  if(!a.ports.some(p=>p.name===pa)) a.ports.push({name:pa,ip:"",vlan:""});
+  if(!b.ports.some(p=>p.name===pb)) b.ports.push({name:pb,ip:"",vlan:""});
+  const busy=state.links.some(l=>(l.a.d===a.id&&l.a.p===pa)||(l.b.d===a.id&&l.b.p===pa)||(l.a.d===b.id&&l.a.p===pb)||(l.b.d===b.id&&l.b.p===pb));
+  if(busy && !confirm("Un de ces ports est déjà câblé. Relier quand même ?")) return;
+  const nl={id:uid(),a:{d:a.id,p:pa},b:{d:b.id,p:pb},cableType:$("#wire-type").value||"copper-cat6",label:$("#wire-label").value.trim()};
+  state.links.push(nl);
+  closeWireModal(); setWireMode(false);
+  sel={kind:"link",id:nl.id};
+  renderCanvas(); renderPanel(); renderFormView(); triggerSave();
+  toast("Liaison créée.");
+};
+
+// ============================================================================
+// INTERACTIONS CANVAS
+// ============================================================================
+let pDown=null;
+svg.addEventListener("pointerdown",e=>{
+  const n=e.target.closest("[data-node]"),l=e.target.closest("[data-link]");
+  svg.setPointerCapture(e.pointerId);pDown={x:e.clientX,y:e.clientY};
+  if(n){const d=dev(n.dataset.node),p=toWorld(e);drag={type:"node",id:d.id,dx:d.x-p.x,dy:d.y-p.y,moved:false};if(!wireMode) select({kind:"dev",id:d.id},true);}
+  else if(l){drag={type:"none"};setWireMode(false);select({kind:"link",id:l.dataset.link},true);}
+  else{drag={type:"pan",sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y,moved:false};}
+});
+svg.addEventListener("pointermove",e=>{
+  if(!drag)return;
+  if(drag.type==="node"){const d=dev(drag.id),p=toWorld(e);d.x=Math.round((p.x+drag.dx)/4)*4;d.y=Math.round((p.y+drag.dy)/4)*4;drag.moved=true;renderCanvas();}
+  else if(drag.type==="pan"){const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;view.x=drag.vx+dx;view.y=drag.vy+dy;renderCanvas();}
+});
+function endDrag(e){
+  if(drag&&drag.type==="node"){
+    const moved=drag.moved||(pDown&&Math.hypot(e.clientX-pDown.x,e.clientY-pDown.y)>5);
+    if(!moved){
+      if(wireMode){
+        if(!wireFrom){ wireFrom=drag.id; updateWireBanner(); renderCanvas(); }
+        else openWireModal(wireFrom, drag.id);
+      } else openInspect(drag.id);
+    } else triggerSave();
+  } else if(drag&&drag.type==="pan"&&!drag.moved&&sel) select(null);
+  drag=null;pDown=null;
+}
+svg.addEventListener("pointerup",endDrag);
+svg.addEventListener("pointercancel",endDrag);
+svg.addEventListener("wheel",e=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.12:1/1.12);},{passive:false});
+
+$("#b-fit").onclick=fit;
+$("#b-auto").onclick=()=>{autoLayout();fit();triggerSave();};
+$("#b-zin").onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1.25);};
+$("#b-zout").onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1/1.25);};
+$("#b-add-dev").onclick=()=>openDeviceModal();
+$("#b-wire").onclick=()=>setWireMode(!wireMode);
+$("#b-wire-cancel").onclick=()=>setWireMode(false);
+$("#b-labels").onclick=()=>{
+  showLabels=!showLabels;
+  $("#b-labels").classList.toggle("active-tool", showLabels);
+  renderCanvas();
+};
+
+// ============================================================================
+// PANNEAU LATÉRAL
+// ============================================================================
+function select(s,fromCanvas){sel=s;if(s&&s.kind==="dev")tab="devices";if(s&&s.kind==="link")tab="links";renderPanel();renderCanvas();}
+
+const TABS=[["devices","Équipements"],["links","Liaisons"],["data","Données"]];
+function renderTabs(){$("#tabs").innerHTML=TABS.map(([k,t])=>`<button role="tab" aria-selected="${tab===k}" data-tab="${k}">${t}</button>`).join("");}
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;tab=b.dataset.tab;renderPanel();});
+
+const devOpts=cur=>`<option value="">Choisir…</option>`+state.devices.map(d=>`<option value="${d.id}"${d.id===cur?" selected":""}>${esc(d.name)}</option>`).join("");
+
+function renderPanel(){
+  renderTabs();
+  if(tab==="devices") panel.innerHTML=devicesHtml();
+  else if(tab==="links") panel.innerHTML=linksHtml();
+  else panel.innerHTML=dataHtml();
+}
+
+function devicesHtml(){
+  let h=`<h3 style="display:flex;justify-content:space-between;align-items:center"><span>Équipements (${state.devices.length})</span><button class="btn primary" style="font-size:11px;padding:3px 8px" data-act="add-dev">+ Ajouter</button></h3>`;
+  if(!state.devices.length)h+=`<div class="empty">Aucun équipement. Cliquez sur « + Ajouter ».</div>`;
+  else h+=`<div class="list">`+state.devices.map(d=>{
+    const st=d.status||"online",sdot=st==="offline"?"#ef4444":st==="maintenance"?"#f59e0b":"#10b981";
+    return `<div class="item${sel&&sel.kind==="dev"&&sel.id===d.id?" on":""}" data-act="pick-dev" data-id="${d.id}"><span class="dot" style="background:${sdot}"></span><span class="t">${esc(d.name)}</span><span class="s">${esc(d.ip)}</span></div>`;
+  }).join("")+`</div>`;
+  if(sel&&sel.kind==="dev"){
+    const d=dev(sel.id);
+    if(d){
+      const st=d.status||"online";
+      h+=`<div class="editor">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11.5px;color:var(--muted)"><strong>${esc(d.fabricant||"—")}</strong> · ${esc(d.modele||d.sousCategorie||"—")}</span>
+          <button class="btn primary" style="font-size:11px;padding:2px 8px" data-act="inspect-modal">🔍 Fiche</button>
+        </div>
+        <div class="row"><div><label class="f">Statut</label>
+          <select data-f="dev.status">
+            <option value="online" ${st==="online"?"selected":""}>🟢 En ligne</option>
+            <option value="offline" ${st==="offline"?"selected":""}>🔴 Hors ligne</option>
+            <option value="maintenance" ${st==="maintenance"?"selected":""}>🟠 Maintenance</option>
+          </select>
+        </div></div>
+        <div class="row"><div><label class="f">Nom</label><input data-f="dev.name" value="${esc(d.name)}"></div></div>
+        <div class="row"><div><label class="f">Marque</label><input data-f="dev.fabricant" value="${esc(d.fabricant||"")}"></div>
+        <div><label class="f">Modèle</label><input data-f="dev.modele" value="${esc(d.modele||"")}"></div></div>
+        <div class="row"><div><label class="f">Adresse IP</label><input class="mono" data-f="dev.ip" value="${esc(d.ip)}"></div></div>
+        <h3>Ports (${(d.ports||[]).length})</h3>
+        <div style="display:flex;flex-direction:column;gap:6px">`;
+      (d.ports||[]).forEach((p,i)=>{h+=`<div style="display:flex;gap:4px"><input data-f="port.name" data-i="${i}" value="${esc(p.name)}" style="flex:1"><input class="mono" data-f="port.ip" data-i="${i}" value="${esc(p.ip)}" placeholder="IP" style="flex:1.2"><input data-f="port.vlan" data-i="${i}" value="${esc(p.vlan)}" placeholder="VLAN" style="width:50px"><button class="btn icon danger" data-act="del-port" data-i="${i}">×</button></div>`;});
+      h+=`</div><div class="row" style="margin-top:10px"><button class="btn" data-act="add-port">+ Port</button><button class="btn" data-act="edit-dev">Modifier</button><button class="btn danger" data-act="del-dev">Supprimer</button></div></div>`;
+    }
+  }
+  return h;
+}
+
+function linksHtml(){
+  const defaultA = lf.a || (state.devices[0]?.id || "");
+  const defaultB = lf.b || (state.devices[1]?.id || "");
+  const da=dev(defaultA),db=dev(defaultB);
+  const dl=d=>d?(d.ports||[]).map(p=>`<option value="${esc(p.name)}">`).join(""):"";
+  let h=`<h3>Relier deux équipements</h3>
+  <div class="row"><div><label class="f">Équipement A</label><select data-lf="a">${devOpts(defaultA)}</select></div>
+  <div><label class="f">Port de A</label><input data-lf="pa" list="dl-a" value="${esc(lf.pa)}" placeholder="Port…"><datalist id="dl-a">${dl(da)}</datalist></div></div>
+  <div class="row"><div><label class="f">Équipement B</label><select data-lf="b">${devOpts(defaultB)}</select></div>
+  <div><label class="f">Port de B</label><input data-lf="pb" list="dl-b" value="${esc(lf.pb)}" placeholder="Port…"><datalist id="dl-b">${dl(db)}</datalist></div></div>
+  <div class="row">
+    <div><label class="f">Câble</label><select data-lf="cableType">${Object.keys(CABLE_TYPES).map(k=>`<option value="${k}" ${lf.cableType===k?"selected":""}>${CABLE_TYPES[k].label}</option>`).join("")}</select></div>
+    <div><label class="f">Étiquette</label><input data-lf="label" value="${esc(lf.label)}" placeholder="10 Gb/s Trunk"></div>
+  </div>
+  <button class="btn primary" data-act="add-link">Créer la liaison</button>
+  <h3>Liaisons (${state.links.length})</h3>`;
+  if(!state.links.length)h+=`<div class="empty">Aucune liaison.</div>`;
+  else h+=`<div class="list">`+state.links.map(l=>{const a=dev(l.a.d),b=dev(l.b.d);return `<div class="item${sel&&sel.kind==="link"&&sel.id===l.id?" on":""}" data-act="pick-link" data-id="${l.id}"><span class="t">${esc(a?a.name:"?")} <span class="s">${esc(l.a.p)}</span> ↔ ${esc(b?b.name:"?")} <span class="s">${esc(l.b.p)}</span></span></div>`;}).join("")+`</div>`;
+  if(sel&&sel.kind==="link"){const l=state.links.find(x=>x.id===sel.id);if(l)h+=`<div class="editor"><div class="row"><div><label class="f">Câble</label><select data-f="link.cableType">${Object.keys(CABLE_TYPES).map(k=>`<option value="${k}" ${(l.cableType||"copper-cat6")===k?"selected":""}>${CABLE_TYPES[k].label}</option>`).join("")}</select></div><div><label class="f">Étiquette</label><input data-f="link.label" value="${esc(l.label)}"></div></div><div class="row" style="margin-top:10px"><button class="btn danger" data-act="del-link">Supprimer</button></div></div>`;}
+  return h;
+}
+
+function dataHtml(){
+  return `<h3>Exporter</h3>
+  <div class="row"><button class="btn" data-act="exp-json">JSON</button><button class="btn" data-act="exp-png">PNG</button></div>
+  <div class="row"><button class="btn" data-act="exp-svg">SVG</button><button class="btn" data-act="exp-pdf">PDF</button></div>
+  <h3>Importer / Restaurer</h3>
+  <textarea id="json" rows="9" spellcheck="false" placeholder="Collez ici un JSON d'architecture…"></textarea>
+  <div class="row" style="margin-top:8px"><button class="btn" data-act="show-json">Voir JSON</button><button class="btn primary" data-act="imp-json">Charger</button></div>`;
+}
+
+panel.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act]");if(!t)return;
+  const act=t.dataset.act,d=sel&&sel.kind==="dev"?dev(sel.id):null;
+  if(act==="pick-dev") select({kind:"dev",id:t.dataset.id});
+  else if(act==="pick-link") select({kind:"link",id:t.dataset.id});
+  else if(act==="add-dev") openDeviceModal();
+  else if(act==="edit-dev"&&d) openDeviceModal(d.id);
+  else if(act==="inspect-modal"&&d) openInspect(d.id);
+  else if(act==="add-port"&&d){d.ports.push({name:"Port "+(d.ports.length+1),ip:"",vlan:""});renderPanel();renderCanvas();triggerSave();}
+  else if(act==="del-port"&&d){
+    const p=d.ports[+t.dataset.i];
+    if(p&&portIsUsed(d,p.name)&&!confirm("Ce port est câblé. Supprimer le port et ses liaisons ?")) return;
+    if(p) state.links=state.links.filter(l=>!((l.a.d===d.id&&l.a.p===p.name)||(l.b.d===d.id&&l.b.p===p.name)));
+    d.ports.splice(+t.dataset.i,1);renderPanel();renderCanvas();triggerSave();
+  }
+  else if(act==="del-dev"&&d){state.devices=state.devices.filter(x=>x.id!==d.id);state.links=state.links.filter(l=>l.a.d!==d.id&&l.b.d!==d.id);sel=null;renderPanel();renderCanvas();triggerSave();}
+  else if(act==="add-link"){
+    const a=dev(lf.a),b=dev(lf.b),pa=lf.pa.trim(),pb=lf.pb.trim();
+    if(!a||!b||!pa||!pb){toast("Complétez équipements + ports.");return;}
+    if(!a.ports.some(p=>p.name===pa))a.ports.push({name:pa,ip:"",vlan:""});
+    if(!b.ports.some(p=>p.name===pb))b.ports.push({name:pb,ip:"",vlan:""});
+    const nl={id:uid(),a:{d:a.id,p:pa},b:{d:b.id,p:pb},cableType:lf.cableType||"copper-cat6",label:lf.label.trim()};
+    state.links.push(nl);lf.pa="";lf.pb="";lf.label="";sel={kind:"link",id:nl.id};renderPanel();renderCanvas();triggerSave();toast("Liaison créée.");
+  }
+  else if(act==="del-link"){state.links=state.links.filter(l=>l.id!==sel.id);sel=null;renderPanel();renderCanvas();triggerSave();}
+  else if(act==="exp-json") downloadText("architecture.json",JSON.stringify(schemaPayload(),null,2));
+  else if(act==="show-json"){const el=$("#json");if(el)el.value=JSON.stringify(schemaPayload(),null,2);}
+  else if(act==="imp-json"){const el=$("#json");if(el)importJson(el.value);}
+});
+
+panel.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.lf){lf[t.dataset.lf]=t.value;return;}
+  const f=t.dataset.f;if(!f)return;
+  if(f.startsWith("dev.")){const d=dev(sel.id);if(d){d[f.slice(4)]=t.value;renderCanvas();triggerSave();}}
+  else if(f.startsWith("port.")){const d=dev(sel.id),p=d.ports[+t.dataset.i],k=f.slice(5);if(k==="name"){state.links.forEach(l=>{if(l.a.d===d.id&&l.a.p===p.name)l.a.p=t.value;if(l.b.d===d.id&&l.b.p===p.name)l.b.p=t.value;});}p[k]=t.value;renderCanvas();triggerSave();}
+  else if(f==="link.label"){const l=state.links.find(x=>x.id===sel.id);if(l){l.label=t.value;renderCanvas();triggerSave();}}
+  else if(f==="link.cableType"){const l=state.links.find(x=>x.id===sel.id);if(l){l.cableType=t.value;renderCanvas();triggerSave();}}
+});
+panel.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.lf==="a"||t.dataset.lf==="b"){lf[t.dataset.lf]=t.value;lf["p"+t.dataset.lf]="";renderPanel();}
+  else if(t.dataset.f==="dev.status"){const d=dev(sel.id);if(d){d.status=t.value;renderCanvas();renderPanel();triggerSave();}}
+});
+
+// Export / Import
+function downloadText(n,t){downloadBlob(n,new Blob([t],{type:"text/plain"}));}
+function downloadBlob(n,b){const a=document.createElement("a");a.download=n;a.href=URL.createObjectURL(b);a.click();URL.revokeObjectURL(a.href);}
+function importJson(txt){
+  try{const o=JSON.parse(txt);if(Array.isArray(o.devices)){state.devices=o.devices.map(d=>({...d,status:d.status||"online"}));state.links=o.links||[];state.vlans=o.vlans||[];ensureLayout();renderPanel();renderFormView();fit();triggerSave();toast("Schéma importé.");}}
+  catch(e){alert("Format JSON invalide.");}
+}
+
+// Import depuis fichier
+$("#btn-actions-export").onclick=()=>downloadText("architecture-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(schemaPayload(),null,2));
+$("#btn-actions-import").onclick=()=>$("#file-import-input-actions").click();
+$("#file-import-input-actions").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>importJson(ev.target.result);r.readAsText(f);});
+
+let tt=null;
+function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("on"),3200);}
+
+
+// ============================================================================
+// LÉGENDE
+// ============================================================================
+const STATUS_LEG=[["#10b981","En ligne"],["#f59e0b","Maintenance"],["#ef4444","Hors ligne"]];
+function renderLegend(){
+  const el=$("#legend");if(!el)return;
+  const usedCables=new Set(state.links.map(l=>l.cableType||"copper-cat6"));
+  const cab=Object.entries(CABLE_TYPES).filter(([k])=>usedCables.has(k));
+  const types=[...new Set(state.devices.map(d=>d.typeSchema).filter(Boolean))];
+  let h=`<h4>Câbles</h4>`+(cab.length?cab.map(([k,c])=>`<div class="lg"><span class="sw-line" style="border-color:${c.color}"></span>${esc(c.label.replace(/ \(.*\)$/,""))}</div>`).join(""):`<div class="lg" style="color:var(--muted)">Aucune liaison</div>`);
+  h+=`<h4>Statut</h4>`+STATUS_LEG.map(([c,l])=>`<div class="lg"><span class="sw-dot" style="background:${c}"></span>${l}</div>`).join("");
+  if(types.length)h+=`<h4>Types d'équipements</h4>`+types.map(t=>`<div class="lg"><span class="sw-box" style="background:${COLOR_MAP[t]||"#2f8470"}"></span>${esc((TYPE_OPTIONS.find(o=>o[0]===t)||[])[1]||(t.charAt(0).toUpperCase()+t.slice(1).replace(/_/g," ")))}</div>`).join("");
+  h+=`<h4>Étiquettes</h4><div class="lg" style="color:var(--muted)">Nom du port · VLAN, puis adresse IP</div>`;
+  el.innerHTML=h;
+}
+{
+  const _rc=renderCanvas;
+  renderCanvas=function(){_rc();renderLegend();};
+}
+$("#b-legend").onclick=()=>$("#legend").classList.toggle("on");
+
+// ============================================================================
+// EXPORTS PNG / SVG / PDF
+// ============================================================================
+function stamp(){return new Date().toISOString().slice(0,10);}
+function buildExportSvg(){
+  const P=PAL.light,saveSel=sel,saveWire=wireFrom;
+  sel=null;wireFrom=null;
+  let inner;try{inner=diagramMarkup(P);}finally{sel=saveSel;wireFrom=saveWire;}
+  const b=bbox(),pad=70,title="Schéma d'architecture réseau";
+  // légende
+  const usedCables=[...new Set(state.links.map(l=>l.cableType||"copper-cat6"))].filter(k=>CABLE_TYPES[k]);
+  let lg="",lx=0,ly=0,lw=0;
+  lg+=`<text x="0" y="0" font-family="${FONT}" font-size="11" font-weight="700" fill="${P.ink}">LÉGENDE</text>`;
+  ly=18;
+  usedCables.forEach(k=>{const c=CABLE_TYPES[k],t=c.label.replace(/ \(.*\)$/,"");lg+=`<line x1="0" y1="${ly-3}" x2="24" y2="${ly-3}" stroke="${c.color}" stroke-width="3" stroke-linecap="round"/><text x="32" y="${ly}" font-family="${FONT}" font-size="11" fill="${P.ink}">${esc(t)}</text>`;lw=Math.max(lw,32+t.length*6);ly+=16;});
+  STATUS_LEG.forEach(([c,t])=>{lg+=`<circle cx="5" cy="${ly-4}" r="5" fill="${c}"/><text x="32" y="${ly}" font-family="${FONT}" font-size="11" fill="${P.ink}">${t}</text>`;ly+=16;});
+  lw=Math.max(lw,160);
+  const dw=b.x1-b.x0,dh=b.y1-b.y0;
+  const W2=Math.max(dw+pad*2,lw+pad*2,520),H2=dh+pad+40+30+ly+20;
+  const ox=(W2-dw)/2-b.x0,oy=pad+40-b.y0;
+  const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(W2)}" height="${Math.ceil(H2)}" viewBox="0 0 ${Math.ceil(W2)} ${Math.ceil(H2)}">`+
+    `<rect width="100%" height="100%" fill="#ffffff"/>`+
+    `<text x="${pad/2}" y="30" font-family="${FONT}" font-size="16" font-weight="700" fill="${P.ink}">${esc(title)}</text>`+
+    `<text x="${W2-pad/2}" y="30" text-anchor="end" font-family="${FONT}" font-size="11" fill="${P.muted}">${stamp()} · ${state.devices.length} équipements · ${state.links.length} liaisons</text>`+
+    `<g transform="translate(${ox} ${oy})">${inner}</g>`+
+    `<g transform="translate(${pad/2} ${dh+pad+40+30})">${lg}</g></svg>`;
+  return{svg:svgStr,w:Math.ceil(W2),h:Math.ceil(H2)};
+}
+function svgToCanvas(scale){
+  return new Promise((resolve,reject)=>{
+    const e=buildExportSvg();
+    const maxDim=7000;scale=Math.min(scale,maxDim/Math.max(e.w,e.h));
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement("canvas");c.width=Math.round(e.w*scale);c.height=Math.round(e.h*scale);
+      const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+      resolve({canvas:c,w:e.w,h:e.h});
+    };
+    img.onerror=()=>reject(new Error("rendu impossible"));
+    img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(e.svg);
+  });
+}
+function noDevices(){if(!state.devices.length){toast("Aucun équipement à exporter.");return true;}return false;}
+function exportSVG(){if(noDevices())return;downloadBlob("schema-reseau-"+stamp()+".svg",new Blob([buildExportSvg().svg],{type:"image/svg+xml"}));toast("SVG exporté.");}
+async function exportPNG(){
+  if(noDevices())return;
+  try{const r=await svgToCanvas(2);r.canvas.toBlob(b=>{downloadBlob("schema-reseau-"+stamp()+".png",b);toast("PNG exporté.");},"image/png");}
+  catch(e){toast("Export PNG impossible : "+e.message);}
+}
+function makePdf(jpeg,iw,ih,pw,ph){
+  const enc=new TextEncoder(),parts=[],offs=[];let len=0;
+  const push=b=>{if(typeof b==="string")b=enc.encode(b);parts.push(b);len+=b.length;};
+  const obj=(n,fn)=>{offs[n]=len;push(n+" 0 obj\n");fn();push("\nendobj\n");};
+  push("%PDF-1.4\n");
+  obj(1,()=>push("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2,()=>push("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"));
+  obj(3,()=>push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`));
+  obj(4,()=>{push(`<< /Type /XObject /Subtype /Image /Width ${iw} /Height ${ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`);push(jpeg);push("\nendstream");});
+  const cs=`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
+  obj(5,()=>push(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+  const xr=len;
+  let x="xref\n0 6\n0000000000 65535 f \n";
+  for(let i=1;i<=5;i++)x+=String(offs[i]).padStart(10,"0")+" 00000 n \n";
+  push(x+`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`);
+  return new Blob(parts,{type:"application/pdf"});
+}
+async function exportPDF(){
+  if(noDevices())return;
+  try{
+    const r=await svgToCanvas(2);
+    const bin=atob(r.canvas.toDataURL("image/jpeg",.92).split(",")[1]);
+    const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    let pw=r.w*.75,ph=r.h*.75;const f=Math.min(1,14000/Math.max(pw,ph));pw=Math.round(pw*f*100)/100;ph=Math.round(ph*f*100)/100;
+    downloadBlob("schema-reseau-"+stamp()+".pdf",makePdf(bytes,r.canvas.width,r.canvas.height,pw,ph));
+    toast("PDF exporté.");
+  }catch(e){toast("Export PDF impossible : "+e.message);}
+}
+const exportJSON=()=>downloadText("architecture-"+stamp()+".json",JSON.stringify(schemaPayload(),null,2));
+const EXP={png:exportPNG,svg:exportSVG,pdf:exportPDF,json:exportJSON};
+$("#b-export").onclick=e=>{e.stopPropagation();$("#export-menu").classList.toggle("on");};
+$("#export-menu").addEventListener("click",e=>{const b=e.target.closest("[data-exp]");if(!b)return;$("#export-menu").classList.remove("on");EXP[b.dataset.exp]();});
+document.addEventListener("click",()=>$("#export-menu").classList.remove("on"));
+panel.addEventListener("click",e=>{const t=e.target.closest("[data-act]");if(!t)return;const m=/^exp-(png|svg|pdf)$/.exec(t.dataset.act);if(m)EXP[m[1]]();});
+
+// ============================================================================
+// RACCOURCIS CLAVIER
+// ============================================================================
+function openShortcuts(){$("#modal-shortcuts").style.display="flex";}
+function closeShortcuts(){$("#modal-shortcuts").style.display="none";}
+$("#b-help").onclick=openShortcuts;
+$("#btn-close-shortcuts").onclick=closeShortcuts;
+$("#btn-ok-shortcuts").onclick=closeShortcuts;
+let kbSave=null;
+function moveSel(dx,dy){
+  const d=sel&&sel.kind==="dev"?dev(sel.id):null;
+  if(d){d.x+=dx;d.y+=dy;renderCanvas();clearTimeout(kbSave);kbSave=setTimeout(triggerSave,300);}
+  else{view.x-=dx*4;view.y-=dy*4;renderCanvas();}
+}
+function anyModalOpen(){return [...document.querySelectorAll(".modal-backdrop")].some(m=>m.style.display==="flex");}
+document.addEventListener("keydown",e=>{
+  if(!$("#view-diagram").classList.contains("active"))return;
+  const tg=e.target,typing=tg&&(/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)||tg.isContentEditable);
+  const k=e.key,ctrl=e.ctrlKey||e.metaKey;
+  if(k==="Escape"){
+    if(anyModalOpen()){document.querySelectorAll(".modal-backdrop").forEach(m=>{m.style.display="none";});inspectedId=null;wireFrom=null;updateWireBanner();renderCanvas();}
+    else if(wireMode)setWireMode(false);
+    else if(sel)select(null);
+    $("#export-menu").classList.remove("on");
+    return;
+  }
+  if(ctrl&&k.toLowerCase()==="s"){e.preventDefault();clearTimeout(saveTimer);doSave();toast("Sauvegarde effectuée.");return;}
+  if(ctrl&&k.toLowerCase()==="e"){e.preventDefault();exportPNG();return;}
+  if(typing||anyModalOpen()||ctrl||e.altKey)return;
+  const step=e.shiftKey?20:4;
+  switch(k){
+    case "n":case "N":e.preventDefault();openDeviceModal();break;
+    case "r":case "R":setWireMode(!wireMode);break;
+    case "e":case "E":$("#b-labels").click();break;
+    case "g":case "G":$("#b-legend").click();break;
+    case "a":case "A":autoLayout();fit();triggerSave();toast("Auto-disposition appliquée.");break;
+    case "f":case "F":case "0":fit();break;
+    case "+":case "=":$("#b-zin").click();break;
+    case "-":case "_":$("#b-zout").click();break;
+    case "ArrowLeft":e.preventDefault();moveSel(-step,0);break;
+    case "ArrowRight":e.preventDefault();moveSel(step,0);break;
+    case "ArrowUp":e.preventDefault();moveSel(0,-step);break;
+    case "ArrowDown":e.preventDefault();moveSel(0,step);break;
+    case "Delete":case "Backspace":{
+      if(!sel)break;e.preventDefault();
+      const what=sel.kind==="dev"?"cet équipement et ses liaisons":"cette liaison";
+      if(!confirm("Supprimer "+what+" ?"))break;
+      const b=panel.querySelector(sel.kind==="dev"?'[data-act="del-dev"]':'[data-act="del-link"]');if(b)b.click();
+      break;}
+    case "?":e.preventDefault();openShortcuts();break;
+  }
+});
+
+// ============================================================================
+// IMPORT GLPI
+// ============================================================================
+let glpiSet=null, glpiTimer=null, glpiBusy=false, glpiLast=null, glpiWarn="";
+const hhmm=()=>{const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
+function setGlpiCardStatus(t,warn){ const el=$("#glpi-card-status"); if(el){ el.textContent=t; el.style.color=warn?"#d97706":"var(--muted)"; } }
+function glpiMsg(t,err){ const el=$("#glpi-msg"); el.textContent=t; el.style.color=err?"#dc2626":"var(--muted)"; }
+function glpiConfigured(s){ return !!(s&&s.host&&s.hasAppToken&&s.hasUserToken); }
+function refreshGlpiCard(){
+  if(!serverAvailable){ setGlpiCardStatus("Le serveur local est requis.",true); return; }
+  if(!glpiConfigured(glpiSet)){ setGlpiCardStatus("Non configuré : cliquez sur « Paramétrer GLPI »."); return; }
+  const base=glpiSet.host+":"+glpiSet.port+(glpiSet.autoSync?" · automatique toutes les "+glpiSet.intervalMin+" min":" · manuel");
+  setGlpiCardStatus((glpiLast?base+" · "+glpiLast:base)+(glpiWarn?" ⚠️ "+glpiWarn:""), !!glpiWarn);
+}
+async function loadGlpiSettings(){
+  if(!serverAvailable) return;
+  try{ const r=await fetch(`${API}/glpi/settings`,{signal:AbortSignal.timeout(3000)}); const d=await r.json(); if(d.ok) glpiSet=d.settings; }catch(e){}
+}
+function startGlpiAuto(){
+  clearInterval(glpiTimer); glpiTimer=null;
+  refreshGlpiCard();
+  if(!serverAvailable||!glpiConfigured(glpiSet)||!glpiSet.autoSync) return;
+  glpiSync(false);
+  glpiTimer=setInterval(()=>glpiSync(false), Math.max(1,glpiSet.intervalMin)*60*1000);
+}
+const GLPI_CAT_BY_TYPE={routeur:"Routage WAN",routeur_cellulaire:"Routage cellulaire",passerelle_sdwan:"Routage SD-WAN",pare_feu:"Sécurité réseau",pare_feu_routeur:"Sécurité réseau",switch_core:"Commutation cœur",switch_distribution:"Commutation LAN",switch_acces:"Commutation LAN",switch_datacenter:"Datacenter",switch_industriel:"Commutation industrielle",load_balancer:"Sécurité applicative",point_acces_wifi:"Réseau sans fil",controleur_wifi:"Réseau sans fil",serveur:"Serveurs et calcul",stockage:"Stockage",camera_ip:"Vidéosurveillance",onduleur:"Baie et énergie"};
+function glpiCategoryName(e){
+  if(e.group==="printer") return "Imprimantes";
+  if(e.group==="phone") return "Téléphonie IP";
+  if(e.group==="workstation") return "Postes de travail";
+  return GLPI_CAT_BY_TYPE[e.typeSchema]||"Réseau (GLPI)";
+}
+// Une référence de catalogue par fabricant + modèle GLPI (créée une seule fois)
+function glpiHash(s){ let x=0; for(let i=0;i<s.length;i++) x=((x<<5)-x+s.charCodeAt(i))|0; return Math.abs(x).toString(36); }
+function glpiCatalogEntry(e){
+  const fab=e.manufacturer||"(Fabricant inconnu)", mod=e.model||e.glpiType||e.name;
+  const id="CUSTOM-GLPI-"+glpiHash((fab+"|"+mod+"|"+e.typeSchema).toLowerCase());
+  const found=NETWORK_CATALOG.find(c=>c.id===id);
+  if(found) return {entry:found,isNew:false};
+  const entry={
+    id, categorie:glpiCategoryName(e), sousCategorie:mod, fabricant:fab,
+    fonction:"Équipement importé de GLPI ("+(e.glpiType||e.category)+")", coucheOSI:"",
+    environnement:e.site||"", caracteristiques:"Ajouté automatiquement depuis GLPI",
+    typeSchema:e.typeSchema, nbPorts:4, portsDefaut:numberedPorts(e.typeSchema,4)
+  };
+  return {entry,isNew:true};
+}
+async function glpiFillCatalog(list){
+  const fresh=[];
+  list.forEach(e=>{ const r=glpiCatalogEntry(e); if(r.isNew&&!fresh.some(f=>f.id===r.entry.id)) fresh.push(r.entry); });
+  for(const en of fresh){ NETWORK_CATALOG.push(en); await saveCustomCatalogEntry(en); }
+  if(fresh.length){ initCatalogFilters(); renderCatalogTable(); }
+  return fresh.length;
+}
+function makeGlpiDevice(e){
+  const cat=glpiCatalogEntry(e).entry;
+  return {
+    id:uid(), glpiId:e.glpiId, glpiKey:e.glpiKey, name:e.name, ip:"", status:e.status||"online",
+    categorie:cat.categorie, sousCategorie:cat.sousCategorie,
+    fabricant:e.manufacturer||cat.fabricant||"", modele:e.model||e.glpiType||"", fonction:cat.fonction||"",
+    coucheOSI:cat.coucheOSI||"", environnement:e.site||cat.environnement||"",
+    caracteristiques:[e.serial&&("N° série : "+e.serial),e.comment].filter(Boolean).join(" · "),
+    typeSchema:e.typeSchema, ports:numberedPorts(e.typeSchema, 4)
+  };
+}
+// Ajoute dans le CATALOGUE les références des équipements GLPI cochés (une par fabricant + modèle, jamais de doublon).
+// Rien n'est ajouté à l'onglet Équipements ni au schéma.
+async function glpiSync(manual){
+  if(glpiBusy||!serverAvailable||!glpiConfigured(glpiSet)) return null;
+  glpiBusy=true;
+  try{
+    const r=await fetch(`${API}/glpi/sync`,{signal:AbortSignal.timeout(60000)});
+    const data=await r.json();
+    if(!data.ok) throw new Error(data.error||"Erreur GLPI");
+    const newRefs=await glpiFillCatalog(data.equipments||[]);
+    glpiLast="dernière vérification "+hhmm()+(newRefs?" · "+newRefs+" nouvelle"+(newRefs>1?"s":"")+" référence"+(newRefs>1?"s":"")+" au catalogue":"");
+    if(newRefs) toast(newRefs+" référence"+(newRefs>1?"s":"")+" ajoutée"+(newRefs>1?"s":"")+" au catalogue depuis GLPI.");
+    const w=(data.warnings||[]);
+    glpiWarn=w.length?"Non lu : "+w.join(" | "):"";
+    refreshGlpiCard();
+    return {newRefs,total:(data.equipments||[]).length,warnings:w};
+  }catch(e){
+    glpiLast="échec "+hhmm();
+    setGlpiCardStatus("⚠️ "+e.message,true);
+    if(manual) throw e;
+    return null;
+  }finally{ glpiBusy=false; }
+}
+function glpiFormValues(){
+  return {
+    host:$("#gs-host").value.trim(), port:Number($("#gs-port").value)||80,
+    protocol:$("#gs-https").checked?"https":"http", path:$("#gs-path").value.trim()||"/glpi/apirest.php",
+    appToken:$("#gs-app").value.trim(), userToken:$("#gs-usr").value.trim(),
+    categories:[...document.querySelectorAll("#gs-cats input:checked")].map(c=>c.value),
+    autoSync:$("#gs-auto").checked, intervalMin:Number($("#gs-interval").value)||10
+  };
+}
+async function glpiPost(path,body){
+  const r=await fetch(`${API}${path}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:AbortSignal.timeout(60000)});
+  return r.json();
+}
+async function openGlpiModal(){
+  const m=$("#modal-glpi"); if(!m) return;
+  m.style.display="flex"; glpiMsg("");
+  if(!serverAvailable){ glpiMsg("Le serveur local est requis (lancez Lancer_Application.bat).",true); return; }
+  await loadGlpiSettings();
+  const s=glpiSet||{};
+  $("#gs-host").value=s.host||""; $("#gs-port").value=s.port||80; $("#gs-https").checked=s.protocol==="https";
+  $("#gs-path").value=s.path||"/glpi/apirest.php";
+  $("#gs-app").value=""; $("#gs-usr").value="";
+  $("#gs-app").placeholder=s.hasAppToken?"•••••• (enregistré — laisser vide pour le garder)":"";
+  $("#gs-usr").placeholder=s.hasUserToken?"•••••• (enregistré — laisser vide pour le garder)":"";
+  $("#gs-auto").checked=s.autoSync!==false; $("#gs-interval").value=String(s.intervalMin||10);
+  const labels=s.categoryLabels||{network:"Équipements réseau",server:"Serveurs",workstation:"Postes (PC)",printer:"Imprimantes",phone:"Téléphones"};
+  $("#gs-cats").innerHTML=Object.keys(labels).map(k=>`<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" value="${k}" ${(s.categories||[]).includes(k)?"checked":""} style="width:auto"> ${esc(labels[k])}</label>`).join("");
+}
+function closeGlpiModal(){ const m=$("#modal-glpi"); if(m) m.style.display="none"; }
+async function glpiTest(){
+  glpiMsg("Test de connexion…");
+  try{
+    const d=await glpiPost("/glpi/test",glpiFormValues());
+    if(!d.ok) throw new Error(d.error||"Erreur");
+    const parts=Object.keys(d.counts).map(k=>`${d.labels[k]} : ${d.counts[k]}`).join(" · ");
+    glpiMsg("✅ Connexion réussie — "+d.total+" équipement(s) dans GLPI ("+parts+")"+((d.warnings||[]).length?" ⚠️ Non lu : "+d.warnings.join(" | "):""));
+  }catch(e){ glpiMsg(e.message,true); }
+}
+async function glpiSave(){
+  glpiMsg("Enregistrement…");
+  try{
+    const d=await glpiPost("/glpi/settings",glpiFormValues());
+    if(!d.ok) throw new Error(d.error||"Erreur");
+    glpiSet=d.settings;
+    $("#gs-app").value=""; $("#gs-usr").value="";
+    startGlpiAuto();
+    glpiMsg("✅ Réglages enregistrés. La synchronisation est lancée.");
+    setTimeout(closeGlpiModal,900);
+  }catch(e){ glpiMsg(e.message,true); }
+}
+async function glpiSyncNow(){
+  glpiMsg("Enregistrement puis synchronisation…");
+  try{
+    const d=await glpiPost("/glpi/settings",glpiFormValues());
+    if(!d.ok) throw new Error(d.error||"Erreur");
+    glpiSet=d.settings; $("#gs-app").value=""; $("#gs-usr").value="";
+    startGlpiAuto();
+    await new Promise(r=>setTimeout(r,50));
+    while(glpiBusy) await new Promise(r=>setTimeout(r,200));
+    const r=await glpiSync(true);
+    glpiMsg(r?("✅ Terminé : "+r.total+" équipement(s) lu(s) dans GLPI, "+r.newRefs+" nouvelle(s) référence(s) ajoutée(s) au catalogue"+(r.newRefs?"":" (déjà présentes)")+". Rien n'a été ajouté au schéma."):"Terminé.");
+  }catch(e){ glpiMsg(e.message,true); }
+}
+$("#btn-form-glpi").onclick=openGlpiModal;
+$("#btn-close-glpi").onclick=closeGlpiModal;
+$("#btn-glpi-test").onclick=glpiTest;
+$("#btn-glpi-save").onclick=glpiSave;
+$("#btn-glpi-sync").onclick=glpiSyncNow;
+
+// ============================================================================
+// INITIALISATION
+// ============================================================================
+async function init(){
+  setSaveStatus("saving","Connexion…");
+  
+  // 1. Vérifier si le serveur local est disponible
+  await checkServer();
+  
+  if(!serverAvailable){
+    $("#server-banner").classList.add("visible");
+    setSaveStatus("ok","Mode local (un seul navigateur)");
+  }
+
+  // 2. Charger le catalogue personnalisé
+  await loadCustomCatalog();
+
+  // 3. Initialiser les filtres du catalogue
+  initCatalogFilters();
+  renderCatalogTable();
+
+  // 4. Charger l'état sauvegardé ou démo
+  const restored=await loadSavedState();
+  if(!restored){
+    loadExampleSeed();
+    await doSave();
+  }
+
+  renderFormView();
+  if($("#b-labels")) $("#b-labels").classList.toggle("active-tool", showLabels);
+
+  // 5. Liaison GLPI : lecture des réglages puis synchronisation automatique
+  await loadGlpiSettings();
+  startGlpiAuto();
+}
+
+init();
+})();
+</script>
+</body>
+</html>

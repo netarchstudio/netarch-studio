@@ -1,0 +1,8 @@
+node_modules/
+.env
+data/
+*.db
+*.db-wal
+*.db-shm
+glpi.config.json
+*.log
